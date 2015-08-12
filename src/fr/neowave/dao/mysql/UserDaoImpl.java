@@ -11,16 +11,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Elekhyr on 04/08/2015.
+ * The MySql implementation of userDao.
+ * Used to perform actions on the MySql users table
  */
 public class UserDaoImpl implements UserDao {
 
+    /**
+     * The database connection var
+     */
     private Connection connection;
 
+    /**
+     * Give the connection to use
+     * @param connection the database connection
+     */
     public UserDaoImpl( Connection connection ) {
         this.connection = connection;
     }
 
+    /**
+     * Insert an user into the mysql database
+     * @param user the user you want to insert
+     * @throws SQLException
+     */
     @Override
     public void create(User user) throws SQLException{
         PreparedStatement preparedStatement= null;
@@ -62,6 +75,11 @@ public class UserDaoImpl implements UserDao {
         }
     }
 
+    /**
+     * Change user's password
+     * @param user the user to whom you want to change password
+     * @throws SQLException
+     */
     @Override
     public void updatePassword(User user) throws SQLException{
         PreparedStatement preparedStatement= null;
@@ -101,6 +119,11 @@ public class UserDaoImpl implements UserDao {
         }
     }
 
+    /**
+     * Change user's suspended attribute
+     * @param user the user to whom you want to suspend or not
+     * @throws SQLException
+     */
     @Override
     public void updateSuspended(User user) throws SQLException{
         PreparedStatement preparedStatement= null;
@@ -140,6 +163,11 @@ public class UserDaoImpl implements UserDao {
         }
     }
 
+    /**
+     * Delete an user
+     * @param user the user you want to delete
+     * @throws SQLException
+     */
     @Override
     public void delete(User user) throws SQLException{
         PreparedStatement preparedStatement= null;
@@ -177,6 +205,11 @@ public class UserDaoImpl implements UserDao {
         }
     }
 
+    /**
+     * Return an ordered list of users stored into the MySql users table
+     * @return List
+     * @throws SQLException
+     */
     @Override
     public List<User> list() throws SQLException {
         PreparedStatement preparedStatement = null;
@@ -227,6 +260,12 @@ public class UserDaoImpl implements UserDao {
         return list;
     }
 
+    /**
+     * Return the user's information
+     * @param username the user to whom you want to have information
+     * @return User
+     * @throws SQLException
+     */
     @Override
     public User getUser(String username) throws SQLException{
         PreparedStatement preparedStatement = null;
