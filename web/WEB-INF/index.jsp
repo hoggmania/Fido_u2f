@@ -5,7 +5,9 @@
   <jsp:param name="title" value="Index"/>
 </jsp:include>
 <body>
+${pageContext.servletContext.contextPath}
 <jsp:include page="default/nav.jsp" flush="true"/>
 Index
+
 </body>
 </html>

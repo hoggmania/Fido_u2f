@@ -1,29 +1,29 @@
 package fr.neowave.beans;
 
-import java.sql.Blob;
+import u2f.data.DeviceRegistration;
+import u2f.exceptions.U2fBadInputException;
+
+import java.io.Serializable;
+import java.security.cert.X509Certificate;
 import java.sql.Date;
 
-/**
- * Created by Elekhyr on 04/08/2015.
- */
-public class Registration {
+public class Registration extends DeviceRegistration implements Serializable{
 
-    private Integer id;
     private String username;
     private String publicKey;
-    private Blob certificate;
-    private Integer counter;
+    private X509Certificate certificate;
+    private Long counter;
     private String keyHandle;
     private Date timestamp;
     private String hostname;
     private Boolean suspended;
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
+    public Registration(String keyHandle, String publicKey, X509Certificate attestationCert, long counter) throws U2fBadInputException {
+        super(keyHandle, publicKey, attestationCert, counter);
+        this.keyHandle = keyHandle;
+        this.publicKey = publicKey;
+        this.certificate = attestationCert;
+        this.counter = counter;
     }
 
     public String getUsername() {
@@ -42,19 +42,19 @@ public class Registration {
         this.publicKey = publicKey;
     }
 
-    public Blob getCertificate() {
+    public X509Certificate getCertificate() {
         return certificate;
     }
 
-    public void setCertificate(Blob certificate) {
+    public void setCertificate(X509Certificate certificate) {
         this.certificate = certificate;
     }
 
-    public Integer getCounter() {
+    public long getCounter() {
         return counter;
     }
 
-    public void setCounter(Integer counter) {
+    public void setCounter(Long counter) {
         this.counter = counter;
     }
 

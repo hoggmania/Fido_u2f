@@ -15,10 +15,7 @@ public abstract class DaoFactory {
         return MySqlDaoFactory.getInstance();
     }
 
-    /*
-     * Méthodes de récupération de l'implémentation des différents DAO (un seul
-     * pour le moment)
-     */
+
     public abstract UserDao getUserDao() throws SQLException;
 
     public abstract RegistrationDao getRegistrationDao() throws SQLException;

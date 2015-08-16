@@ -1,9 +1,9 @@
 package fr.neowave.beans;
 
-/**
- * Created by root on 07/08/15.
- */
-public class Options {
+
+import java.io.Serializable;
+
+public class Options implements Serializable{
 
     private Boolean neowaveAccepted;
     private Boolean adminReplaceUsersTokens;

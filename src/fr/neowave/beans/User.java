@@ -1,13 +1,14 @@
 package fr.neowave.beans;
 
-/**
- * Created by Elekhyr on 04/08/2015.
- */
-public class User {
+import java.io.Serializable;
+import java.util.List;
+
+public class User implements Serializable{
 
     private String username;
     private String password;
     private Boolean suspended;
+    private List<Registration> registrations = null;
 
     public String getUsername() {
         return username;
@@ -33,7 +34,16 @@ public class User {
         this.suspended = suspended;
     }
 
+    public List<Registration> getRegistrations() {
+        return registrations;
+    }
+
+    public void setRegistrations(List<Registration> registrations) {
+        this.registrations = registrations;
+    }
+
     public String toJSON(){
         return "{ username :".concat(username).concat(", password:").concat(password).concat(", suspended:").concat(String.valueOf(suspended).concat("}"));
     }
+
 }

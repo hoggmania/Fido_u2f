@@ -7,9 +7,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/**
- * Created by Elekhyr on 03/08/2015.
- */
 
 @WebServlet("/options")
 public class OptionsServlet extends HttpServlet {
@@ -19,7 +16,12 @@ public class OptionsServlet extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
-        this.getServletContext().getRequestDispatcher("/WEB-INF/options.jsp").forward(request, response);
+        if(request.getSession().getAttribute("username") == "admin"){
+            this.getServletContext().getRequestDispatcher("/WEB-INF/options.jsp").forward(request, response);
+        }
+        else{
+            response.sendRedirect(request.getContextPath().concat("/index"));
+        }
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException{

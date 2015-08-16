@@ -1,5 +1,8 @@
 package u2f.data.messages.json;
 
+import u2f.exceptions.U2fBadInputException;
+
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;

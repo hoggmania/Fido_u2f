@@ -1,14 +1,40 @@
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <header>
-  <nav>
-    <ul>
-      <li><a href="/u2ffido/authentication">Authentication</a></li>
-      <li><a href="/fido/index">Index</a></li>
-      <li><a href="/fido/keyList">Key list</a></li>
-      <li><a href="/fido/options">Options</a></li>
-      <li><a href="/fido/protectedPage">Protected page</a></li>
-      <li><a href="/fido/registration">Registration</a></li>
-      <li><a href="/fido/UsersManager">Users manager</a></li>
-    </ul>
-  </nav>
+<c:choose>
+
+  <c:when test="${sessionScope.username == 'admin'}">
+    <nav>
+      <ul>
+        <li><a href="${pageContext.servletContext.contextPath}/index">Index</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/options">Options</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/keyList">Key list</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/protectedPage">Protected page</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/UsersManager">Users manager</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/disconnection">Log out</a></li>
+      </ul>
+    </nav>
+  </c:when>
+  <c:when test="${sessionScope.username != null}">
+
+    <nav>
+      <ul>
+        <li><a href="${pageContext.servletContext.contextPath}/index">Index</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/keyList">Key list</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/protectedPage">Protected page</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/disconnection">Log out</a></li>
+      </ul>
+    </nav>
+  </c:when>
+  <c:otherwise>
+    <nav>
+      <ul>
+        <li><a href="${pageContext.servletContext.contextPath}/index">Index</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/authentication">Authentication</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/registration">Registration</a></li>
+      </ul>
+    </nav>
+  </c:otherwise>
+
+</c:choose>
 </header>

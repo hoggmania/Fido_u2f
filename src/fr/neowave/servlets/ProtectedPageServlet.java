@@ -8,10 +8,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-/**
- * Created by Elekhyr on 03/08/2015.
- */
-
 
 @WebServlet("/protectedPage")
 public class ProtectedPageServlet extends HttpServlet {
@@ -21,7 +17,12 @@ public class ProtectedPageServlet extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
-        this.getServletContext().getRequestDispatcher("/WEB-INF/protectedPage.jsp").forward(request, response);
+        if(request.getSession().getAttribute("username") != null){
+            this.getServletContext().getRequestDispatcher("/WEB-INF/protectedPage.jsp").forward(request, response);
+        }
+        else{
+            response.sendRedirect(request.getContextPath().concat("/index"));
+        }
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException{

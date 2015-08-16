@@ -5,9 +5,6 @@ import fr.neowave.beans.User;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * Created by Elekhyr on 04/08/2015.
- */
 public interface UserDao{
 
     void create(User user) throws SQLException;

@@ -20,7 +20,13 @@ public class RegistrationServlet extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
-        this.getServletContext().getRequestDispatcher("/WEB-INF/registration.jsp").forward(request, response);
+        if( request.getSession().getAttribute("username") == "admin" || request.getSession().getAttribute("username") == null ){
+            this.getServletContext().getRequestDispatcher("/WEB-INF/registration.jsp").forward(request, response);
+        }
+        else{
+            response.sendRedirect(request.getContextPath().concat("/index"));
+        }
+
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException{
@@ -31,17 +37,23 @@ public class RegistrationServlet extends HttpServlet {
 
         HttpSession session = request.getSession();
 
-        if(registrationForm.getFormResponse().getErrors() == null || registrationForm.getFormResponse().getErrors().isEmpty()){
+        if(registrationForm.getFormResponse().getErrors().isEmpty()){
 
+            if(request.getSession().getAttribute("username") == "admin"){
+                session.setAttribute("actionPerformed", user.getUsername().concat("'s account has been created."));
+                response.sendRedirect(request.getContextPath().concat("/index"));
+            }
+            else{
+                session.setAttribute("username", user.getUsername());
+                session.setMaxInactiveInterval(86400000);
+                response.sendRedirect(request.getContextPath().concat("/index"));
+            }
 
-            session.setAttribute(ServletEnum.USER.toString(), user.getUsername());
-
-            this.getServletContext().getRequestDispatcher("/WEB-INF/index.jsp").forward(request, response);
         }
         else{
-            session.setAttribute(ServletEnum.USER.toString(), null);
-            request.setAttribute(ServletEnum.USER.toString(), user);
-            request.setAttribute(ServletEnum.FORM.toString(), registrationForm.getFormResponse());
+            session.setAttribute("username", null);
+            request.setAttribute("username", request.getParameter("username"));
+            request.setAttribute("form", registrationForm.getFormResponse());
             this.getServletContext().getRequestDispatcher("/WEB-INF/registration.jsp").forward(request, response);
         }
     }
