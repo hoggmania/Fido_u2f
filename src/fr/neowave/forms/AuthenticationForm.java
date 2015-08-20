@@ -15,10 +15,8 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import u2f.U2F;
 import u2f.data.DeviceRegistration;
-import u2f.data.messages.AuthenticateRequest;
-import u2f.data.messages.AuthenticateRequestData;
-import u2f.data.messages.RegisterRequestData;
-import u2f.data.messages.RegisterResponse;
+import u2f.data.messages.*;
+import u2f.exceptions.DeviceCompromisedException;
 import u2f.exceptions.NoEligableDevicesException;
 import u2f.exceptions.U2fBadConfigurationException;
 import u2f.exceptions.U2fBadInputException;
@@ -35,6 +33,7 @@ import java.sql.Date;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AuthenticationForm {
 
@@ -48,88 +47,16 @@ public class AuthenticationForm {
             if(canAuthenticate(request)){
                 user.setRegistrations(registrations);
             }
-        } catch (SQLException | NoSuchAlgorithmException | ClassNotFoundException | IOException e) {
+        } catch (SQLException | NoSuchAlgorithmException | ClassNotFoundException |java.text.ParseException | IOException e) {
             formResponse.setError(FormErrors.DEFAULT_ERR.toString(), e.getMessage());
         }
 
         return user;
     }
 
-    public void doAuthentication(HttpServletRequest request){
-        formResponse = new FormResponse();
-        U2F u2f = new U2F();
-        try {
-
-            JSONObject temp = (JSONObject) new JSONParser().parse((String) request.getSession().getAttribute("challengeRequest"));
-
-            RegisterRequestData registerRequestData =  RegisterRequestData.fromJson("{\"registerRequests\" :["
-                    .concat(temp.get("registerRequests").toString())
-                    .concat("], \"authenticateRequests\" :[")
-                    .concat(temp.get("authenticateRequests").toString().equals("{}")? "":temp.get("authenticateRequests").toString() )
-                    .concat("]}"));
 
 
-            RegisterResponse registerResponse = RegisterResponse.fromJson(request.getParameter("response"));
-
-
-            DeviceRegistration deviceRegistration = u2f.finishRegistration(registerRequestData, registerResponse);
-
-            Registration registration = new Registration(deviceRegistration.getKeyHandle(), deviceRegistration.getPublicKey(),
-                    deviceRegistration.getAttestationCertificate(), deviceRegistration.getCounter());
-
-
-            Calendar calendar = Calendar.getInstance();
-            java.util.Date now = calendar.getTime();
-            registration.setTimestamp(new Date(now.getTime()));
-            registration.setSuspended(false);
-            registration.setUsername((String) request.getSession().getAttribute("username"));
-            registration.setHostname(request.getRequestURI());
-
-            DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().create(registration);
-            formResponse.setMessage("Key has been added");
-
-        } catch (ParseException | U2fBadInputException | U2fBadConfigurationException | NoSuchFieldException | SQLException | IOException | CertificateException e) {
-            formResponse.setError(FormErrors.DEFAULT_ERR.toString(), e.getMessage());
-            e.printStackTrace();
-        }
-
-
-    }
-
-    public void authChallenge(HttpServletRequest request) {
-        URI uri;
-        U2F u2f = new U2F();
-        StringBuilder stringBuilder = new StringBuilder();
-
-        stringBuilder.append("{\"AuthenticateRequest\" :{\"");
-        try {
-            uri = new URI(request.getRequestURL().toString());
-            List<AuthenticateRequest> authenticateRequests = u2f.startAuthentication(uri.getScheme().concat("://").concat(uri.getHost()), registrations)
-                    .getAuthenticateRequests();
-
-            if(!registrations.isEmpty()){
-                for(Registration registration : registrations){
-                    stringBuilder.append("\"");
-                    stringBuilder.append(registration.hashCode());
-                    stringBuilder.append("\":\"");
-                    stringBuilder.append(registration.toJson());
-                    stringBuilder.append("\",");
-                }
-
-
-                stringBuilder.deleteCharAt(stringBuilder.length()-1);
-            }
-
-            stringBuilder.append("}");
-            formResponse.setMessage(stringBuilder.toString());
-
-        } catch (URISyntaxException | NoEligableDevicesException e) {
-            formResponse.setError(FormErrors.DEFAULT_ERR.toString(), e.getMessage());
-        }
-
-    }
-
-    private Boolean canAuthenticate(HttpServletRequest request) throws NoSuchAlgorithmException, SQLException, IOException, ClassNotFoundException {
+    private Boolean canAuthenticate(HttpServletRequest request) throws NoSuchAlgorithmException, SQLException, IOException, ClassNotFoundException, java.text.ParseException {
 
 
         if(areValidParameters(request) && nothingSuspended()){
@@ -152,7 +79,7 @@ public class AuthenticationForm {
             formResponse.setError(FormErrors.USERNAME_ERR.toString(),"Username not found");
             return false;
         }
-        else if (username.length() > 32 || username.length() < 6) {
+        else if (username.equals("admin") || (username.length() > 32 || username.length() < 6)) {
             formResponse.setError(FormErrors.USERNAME_ERR.toString(),"Username not found");
             return false;
         }
@@ -187,7 +114,7 @@ public class AuthenticationForm {
         }
     }
 
-    private Boolean nothingSuspended() throws SQLException, IOException, ClassNotFoundException {
+    private Boolean nothingSuspended() throws SQLException, IOException, ClassNotFoundException, java.text.ParseException {
         if(user.getSuspended()){
             formResponse.setError(FormErrors.USERNAME_ERR.toString(),"Your account has been suspended by admin");
             return false;
@@ -196,7 +123,6 @@ public class AuthenticationForm {
             registrations = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list(user.getUsername());
 
             if(registrations.isEmpty()) return true;
-            System.err.println(registrations);
             registrations.stream().filter(Registration::getSuspended).forEach(registrations::remove);
 
             if (registrations.isEmpty()) {

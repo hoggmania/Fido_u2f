@@ -3,25 +3,28 @@
 <header>
 <c:choose>
 
+
   <c:when test="${sessionScope.username == 'admin'}">
+    Hell yeah ! You are back sir Admin
     <nav>
       <ul>
         <li><a href="${pageContext.servletContext.contextPath}/index">Index</a></li>
-        <li><a href="${pageContext.servletContext.contextPath}/options">Options</a></li>
-        <li><a href="${pageContext.servletContext.contextPath}/keyList">Key list</a></li>
-        <li><a href="${pageContext.servletContext.contextPath}/protectedPage">Protected page</a></li>
-        <li><a href="${pageContext.servletContext.contextPath}/UsersManager">Users manager</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/manage">Manage</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/u2fRegistration">U2F registration</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/setup">Setup</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/log">Logs</a></li>
         <li><a href="${pageContext.servletContext.contextPath}/disconnection">Log out</a></li>
       </ul>
     </nav>
   </c:when>
   <c:when test="${sessionScope.username != null}">
-
+    Welcome back ${sessionScope.username}
     <nav>
       <ul>
         <li><a href="${pageContext.servletContext.contextPath}/index">Index</a></li>
-        <li><a href="${pageContext.servletContext.contextPath}/keyList">Key list</a></li>
-        <li><a href="${pageContext.servletContext.contextPath}/protectedPage">Protected page</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/u2fRegistration">U2F registration</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/passwordProtectedPage">Password protected page</a></li>
+        <li><a href="${pageContext.servletContext.contextPath}/u2fProtectedPage">U2F protected page</a></li>
         <li><a href="${pageContext.servletContext.contextPath}/disconnection">Log out</a></li>
       </ul>
     </nav>

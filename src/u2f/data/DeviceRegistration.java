@@ -26,7 +26,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 public class DeviceRegistration extends JsonSerializable implements Serializable {
-    public static final long INITIAL_COUNTER_VALUE = -1;
+    public static final long INITIAL_COUNTER_VALUE = 0;
     private static final long serialVersionUID = -142942195464329902L;
     @JsonProperty
     private final String keyHandle;

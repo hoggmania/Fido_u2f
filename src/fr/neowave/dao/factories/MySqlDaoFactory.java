@@ -1,8 +1,10 @@
 package fr.neowave.dao.factories;
 
 import fr.neowave.dao.factories.exceptions.DaoConfigurationException;
+import fr.neowave.dao.interfaces.LoggerDao;
 import fr.neowave.dao.interfaces.RegistrationDao;
 import fr.neowave.dao.interfaces.UserDao;
+import fr.neowave.dao.mysql.LoggerDaoImpl;
 import fr.neowave.dao.mysql.RegistrationDaoImpl;
 import fr.neowave.dao.mysql.UserDaoImpl;
 
@@ -85,5 +87,9 @@ public class MySqlDaoFactory extends DaoFactory{
 
     public RegistrationDao getRegistrationDao() throws SQLException {
         return new RegistrationDaoImpl(this.getConnection());
+    }
+
+    public LoggerDao getLoggerDao() throws SQLException{
+        return new LoggerDaoImpl(this.getConnection());
     }
 }

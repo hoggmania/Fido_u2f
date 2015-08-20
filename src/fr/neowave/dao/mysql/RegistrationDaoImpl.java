@@ -6,8 +6,9 @@ import fr.neowave.dao.interfaces.RegistrationDao;
 import java.io.*;
 import java.security.cert.X509Certificate;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class RegistrationDaoImpl implements RegistrationDao   {
 
@@ -24,8 +25,8 @@ public class RegistrationDaoImpl implements RegistrationDao   {
 
         PreparedStatement preparedStatement= null;
 
+        connection.setAutoCommit(false);
         try {
-            connection.setAutoCommit(false);
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutput out = new ObjectOutputStream(bos);
@@ -33,7 +34,6 @@ public class RegistrationDaoImpl implements RegistrationDao   {
             Blob data = connection.createBlob();
             data.setBytes(1, bos.toByteArray());
             bos.close();
-
             preparedStatement = connection.prepareStatement("INSERT INTO registrations (username, publicKey, certificate, counter, keyHandle, date, hostname, suspended) " +
                     "VALUES (?,?,?,?,?,?,?,?)");
             preparedStatement.setString(1, registration.getUsername());
@@ -41,7 +41,7 @@ public class RegistrationDaoImpl implements RegistrationDao   {
             preparedStatement.setBlob(3, data);
             preparedStatement.setLong(4, registration.getCounter());
             preparedStatement.setString(5, registration.getKeyHandle());
-            preparedStatement.setDate(6, registration.getTimestamp());
+            preparedStatement.setString(6, registration.getTimestamp());
             preparedStatement.setString(7, registration.getHostname());
             preparedStatement.setBoolean(8, registration.getSuspended());
 
@@ -82,8 +82,8 @@ public class RegistrationDaoImpl implements RegistrationDao   {
         PreparedStatement preparedStatement= null;
 
         try {
-
             connection.setAutoCommit(false);
+
             preparedStatement = connection.prepareStatement("UPDATE registrations SET counter = ? WHERE username = ? AND keyHandle = ?");
             preparedStatement.setLong(1, registration.getCounter());
             preparedStatement.setString(2, registration.getUsername());
@@ -93,7 +93,7 @@ public class RegistrationDaoImpl implements RegistrationDao   {
                 connection.commit();
             }
             else {
-                throw new SQLException("Insertion error");
+                throw new SQLException("Can't update counter");
             }
 
         } catch (SQLException e) {
@@ -121,7 +121,6 @@ public class RegistrationDaoImpl implements RegistrationDao   {
     public void updateSuspended(Registration registration) throws SQLException {
 
         PreparedStatement preparedStatement= null;
-
         try {
             connection.setAutoCommit(false);
             preparedStatement = connection.prepareStatement("UPDATE registrations SET suspended = ? WHERE username = ? AND keyHandle = ?");
@@ -198,7 +197,7 @@ public class RegistrationDaoImpl implements RegistrationDao   {
     }
 
     @Override
-    public List<Registration> list() throws SQLException, ClassNotFoundException, IOException {
+    public List<Registration> list() throws SQLException, ClassNotFoundException, IOException, ParseException {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         List<Registration> list = new ArrayList<>();
@@ -212,29 +211,26 @@ public class RegistrationDaoImpl implements RegistrationDao   {
             resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()){
-                bis = new ByteArrayInputStream(resultSet.getBlob(5).getBytes(1, (int) resultSet.getBlob(5).length()));
+                bis = new ByteArrayInputStream(resultSet.getBlob(4).getBytes(1, (int) resultSet.getBlob(4).length()));
                 in = new ObjectInputStream(bis);
                 X509Certificate cert = (X509Certificate) in.readObject();
                 bis.close();
-                registration = new Registration(resultSet.getString(3), resultSet.getString(4), cert,resultSet.getInt(6));
+                registration = new Registration();
                 registration.setUsername(resultSet.getString(2));
-                registration.setHostname(resultSet.getString(7));
-                registration.setTimestamp(resultSet.getDate(8));
+                registration.setPublicKey(resultSet.getString(3));
+                registration.setCertificate(cert);
+                registration.setCounter(resultSet.getLong(5));
+                registration.setKeyHandle(resultSet.getString(6));
+                registration.setTimestamp(resultSet.getString(7));
+                registration.setHostname(resultSet.getString(8));
                 registration.setSuspended(resultSet.getBoolean(9));
-
                 list.add(registration);
             }
 
 
         } catch (SQLException e) {
-            if (connection != null) {
-                try {
-                    connection.rollback();
-                } catch(SQLException ex) {
-                    throw new SQLException(ex);
-                }
-                throw new SQLException(e);
-            }
+
+            throw new SQLException(e);
         } catch (ClassNotFoundException e) {
             throw new ClassNotFoundException(e.getMessage());
         } catch (IOException e) {
@@ -245,7 +241,6 @@ public class RegistrationDaoImpl implements RegistrationDao   {
             }
 
             if (connection != null) {
-                connection.setAutoCommit(true);
                 connection.close();
             }
             if (resultSet != null) {
@@ -256,7 +251,7 @@ public class RegistrationDaoImpl implements RegistrationDao   {
     }
 
     @Override
-    public List<Registration> list(String username) throws SQLException, IOException, ClassNotFoundException {
+    public List<Registration> list(String username) throws SQLException, IOException, ClassNotFoundException, ParseException {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         List<Registration> list = new ArrayList<>();
@@ -272,38 +267,27 @@ public class RegistrationDaoImpl implements RegistrationDao   {
 
             while (resultSet.next()){
 
-                bis = new ByteArrayInputStream(resultSet.getBlob(5).getBytes(1, (int) resultSet.getBlob(5).length()));
+                bis = new ByteArrayInputStream(resultSet.getBlob(4).getBytes(1, (int) resultSet.getBlob(4).length()));
                 in = new ObjectInputStream(bis);
                 X509Certificate cert = (X509Certificate) in.readObject();
                 bis.close();
-                registration = new Registration(resultSet.getString(6), resultSet.getString(3), cert,resultSet.getInt(4));
+                registration = new Registration();
                 registration.setUsername(resultSet.getString(2));
-                registration.setHostname(resultSet.getString(6));
-                registration.setTimestamp(resultSet.getDate(7));
-                registration.setSuspended(resultSet.getBoolean(8));
-                System.out.println("---------------------------------------------------------------------------");
-
-                System.out.println(resultSet.getString(1));
-                System.out.println(resultSet.getString(2));
-                System.out.println(resultSet.getString(3));
-                System.out.println(resultSet.getString(5));
-                System.out.println(resultSet.getString(6));
-                System.out.println(resultSet.getString(7));
-                System.out.println(resultSet.getString(8));
-
+                registration.setPublicKey(resultSet.getString(3));
+                registration.setCertificate(cert);
+                registration.setCounter(resultSet.getLong(5));
+                registration.setKeyHandle(resultSet.getString(6));
+                registration.setTimestamp(resultSet.getString(7));
+                registration.setHostname(resultSet.getString(8));
+                registration.setSuspended(resultSet.getBoolean(9));
                 list.add(registration);
             }
 
 
         } catch (SQLException e) {
-            if (connection != null) {
-                try {
-                    connection.rollback();
-                } catch(SQLException ex) {
-                    throw new SQLException(ex);
-                }
-                throw new SQLException(e);
-            }
+
+            throw new SQLException(e);
+
         } catch (ClassNotFoundException e) {
             throw new ClassNotFoundException(e.getMessage());
         } catch (IOException e) {
@@ -314,7 +298,6 @@ public class RegistrationDaoImpl implements RegistrationDao   {
             }
 
             if (connection != null) {
-                connection.setAutoCommit(true);
                 connection.close();
             }
             if (resultSet != null) {
@@ -326,7 +309,7 @@ public class RegistrationDaoImpl implements RegistrationDao   {
     }
 
     @Override
-    public Registration getRegistration(String username, String keyHandle) throws SQLException, ClassNotFoundException, IOException {
+    public Registration getRegistration(String username, String keyHandle) throws SQLException, ClassNotFoundException, IOException, ParseException {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
         Registration registration = null;
@@ -340,17 +323,18 @@ public class RegistrationDaoImpl implements RegistrationDao   {
             resultSet = preparedStatement.executeQuery();
 
             if(resultSet.next()){
-                bis = new ByteArrayInputStream(resultSet.getBlob(5).getBytes(1, (int) resultSet.getBlob(5).length()));
+                bis = new ByteArrayInputStream(resultSet.getBlob(4).getBytes(1, (int) resultSet.getBlob(4).length()));
                 in = new ObjectInputStream(bis);
                 X509Certificate cert = (X509Certificate) in.readObject();
                 bis.close();
-                registration = new Registration(resultSet.getString(3), resultSet.getString(4), cert,resultSet.getInt(6));
+                registration = new Registration();
                 registration.setUsername(resultSet.getString(2));
-                registration.setHostname(resultSet.getString(7));
-                registration.setTimestamp(resultSet.getDate(8));
-                registration.setSuspended(resultSet.getBoolean(9));
-                registration.setHostname(resultSet.getString(7));
-                registration.setTimestamp(resultSet.getDate(8));
+                registration.setPublicKey(resultSet.getString(3));
+                registration.setCertificate(cert);
+                registration.setCounter(resultSet.getLong(5));
+                registration.setKeyHandle(resultSet.getString(6));
+                registration.setTimestamp(resultSet.getString(7));
+                registration.setHostname(resultSet.getString(8));
                 registration.setSuspended(resultSet.getBoolean(9));
             }
 
@@ -358,14 +342,8 @@ public class RegistrationDaoImpl implements RegistrationDao   {
 
 
         } catch (SQLException e) {
-            if (connection != null) {
-                try {
-                    connection.rollback();
-                } catch(SQLException ex) {
-                    throw new SQLException(ex);
-                }
-                throw new SQLException(e);
-            }
+            throw new SQLException(e);
+
         } catch (ClassNotFoundException e) {
             throw new ClassNotFoundException(e.getMessage());
         } catch (IOException e) {
@@ -376,7 +354,6 @@ public class RegistrationDaoImpl implements RegistrationDao   {
             }
 
             if (connection != null) {
-                connection.setAutoCommit(true);
                 connection.close();
             }
             if (resultSet != null) {

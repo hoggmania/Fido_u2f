@@ -40,7 +40,7 @@ public class UserDaoImpl implements UserDao {
 
         try {
             connection.setAutoCommit(false);
-            preparedStatement = connection.prepareStatement("INSERT INTO users (username, password, suspend) " +
+            preparedStatement = connection.prepareStatement("INSERT INTO users (username, password, suspended) " +
                     "VALUES (?,?,?)");
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getPassword());
