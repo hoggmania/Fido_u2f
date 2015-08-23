@@ -36,5 +36,14 @@
     <orderEntry type="library" name="jstl-1.2" level="project" />
     <orderEntry type="library" name="jquery" level="application" />
     <orderEntry type="library" name="json-simple-1.1.1" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/web/WEB-INF/lib/jsf-api-1.1_02.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

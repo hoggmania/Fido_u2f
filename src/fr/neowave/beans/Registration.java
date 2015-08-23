@@ -7,24 +7,17 @@ import java.io.Serializable;
 import java.security.cert.X509Certificate;
 import java.sql.Date;
 
-public class Registration extends DeviceRegistration implements Serializable{
+public class Registration implements Serializable{
 
     private String username;
     private String publicKey;
     private X509Certificate certificate;
     private Long counter;
     private String keyHandle;
-    private Date timestamp;
+    private String timestamp;
     private String hostname;
     private Boolean suspended;
 
-    public Registration(String keyHandle, String publicKey, X509Certificate attestationCert, long counter) throws U2fBadInputException {
-        super(keyHandle, publicKey, attestationCert, counter);
-        this.keyHandle = keyHandle;
-        this.publicKey = publicKey;
-        this.certificate = attestationCert;
-        this.counter = counter;
-    }
 
     public String getUsername() {
         return username;
@@ -66,11 +59,11 @@ public class Registration extends DeviceRegistration implements Serializable{
         this.keyHandle = keyHandle;
     }
 
-    public Date getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Date timestamp) {
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -89,4 +82,6 @@ public class Registration extends DeviceRegistration implements Serializable{
     public void setSuspended(Boolean suspended) {
         this.suspended = suspended;
     }
+
+
 }

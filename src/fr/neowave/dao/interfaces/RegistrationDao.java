@@ -4,6 +4,7 @@ import fr.neowave.beans.Registration;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.List;
 
 public interface RegistrationDao{
@@ -16,7 +17,7 @@ public interface RegistrationDao{
 
     void delete(Registration registration) throws SQLException ;
 
-    List<Registration> list() throws SQLException, ClassNotFoundException, IOException;
-    List<Registration> list(String username) throws SQLException, IOException, ClassNotFoundException;
-    Registration getRegistration(String username, String keyHandle) throws SQLException, ClassNotFoundException, IOException;
+    List<Registration> list() throws SQLException, ClassNotFoundException, IOException, ParseException;
+    List<Registration> list(String username) throws SQLException, IOException, ClassNotFoundException, ParseException;
+    Registration getRegistration(String username, String keyHandle) throws SQLException, ClassNotFoundException, IOException, ParseException;
 }

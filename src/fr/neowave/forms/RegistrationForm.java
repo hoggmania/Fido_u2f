@@ -1,6 +1,7 @@
 package fr.neowave.forms;
 
 import com.sun.org.apache.xml.internal.security.utils.Base64;
+import fr.neowave.beans.Options;
 import fr.neowave.beans.User;
 import fr.neowave.dao.factories.DaoFactory;
 import fr.neowave.dao.factories.FactoryType;
@@ -13,21 +14,19 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 
 
-public class RegistrationForm {
+public class RegistrationForm extends Form{
 
 
     private User user = new User();
-    private FormResponse formResponse = null;
 
 
     public User register(HttpServletRequest request){
-        formResponse = new FormResponse();
         try {
             if(canRegister(request)){
                 DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getUserDao().create(user);
             }
         } catch (SQLException | UnsupportedEncodingException | NoSuchAlgorithmException e) {
-            formResponse.setError(FormErrors.DEFAULT_ERR.toString(), e.getMessage());
+            this.setError(FormErrors.DEFAULT_ERR.toString(), e.getMessage());
         }
 
         return user;
@@ -35,11 +34,15 @@ public class RegistrationForm {
 
     private Boolean canRegister(HttpServletRequest request) throws NoSuchAlgorithmException, SQLException, UnsupportedEncodingException {
 
-        /**
-         * TODO : check if the option 'can user register account is ok
-         */
+        Options options = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getOptionsDao().getOptions();
         if(areValidParameters(request)){
             return true;
+        }
+        else if (request.getSession().getAttribute("username") != null &&
+                request.getSession().getAttribute("username").equals("admin")
+                && !options.getUserCreateAccount()){
+            this.setError("default", "Only admin can create account");
+            return false;
         }
         else{
             return false;
@@ -63,27 +66,27 @@ public class RegistrationForm {
         passwordConfirmation = passwordConfirmation.trim();
 
         if(!username.matches("[a-zA-Z0-9_@.]*")) {
-            formResponse.setError(FormErrors.USERNAME_ERR.toString(), "Allowed characters are a-z A-Z 0-9 . _ @.");
+            this.setError(FormErrors.USERNAME_ERR.toString(), "Allowed characters are a-z A-Z 0-9 . _ @.");
             return false;
         }
         else if (username.length() > 32 || username.length() < 6) {
-            formResponse.setError(FormErrors.USERNAME_ERR.toString(), "Username size must be between 6 and 32.");
+            this.setError(FormErrors.USERNAME_ERR.toString(), "Username size must be between 6 and 32.");
             return false;
         }
         else if (!password.matches("[a-zA-Z0-9]*")) {
-            formResponse.setError(FormErrors.USERNAME_ERR.toString(), "Allowed characters are a-z A-Z 0-9.");
+            this.setError(FormErrors.USERNAME_ERR.toString(), "Allowed characters are a-z A-Z 0-9.");
             return false;
         }
         else if (password.length() > 32 || password.length() < 6) {
-            formResponse.setError(FormErrors.USERNAME_ERR.toString(), "Password size must be between 6 and 32.");
+            this.setError(FormErrors.USERNAME_ERR.toString(), "Password size must be between 6 and 32.");
             return false;
         }
         else if (!password.equals(passwordConfirmation)) {
-            formResponse.setError(FormErrors.USERNAME_ERR.toString(), "Passwords don't match.");
+            this.setError(FormErrors.USERNAME_ERR.toString(), "Passwords don't match.");
             return false;
         }
         else if(DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getUserDao().getUser(username) != null) {
-            formResponse.setError(FormErrors.USERNAME_ERR.toString(), "User already exists.");
+            this.setError(FormErrors.USERNAME_ERR.toString(), "User already exists.");
             return false;
         }
         else {
@@ -101,9 +104,5 @@ public class RegistrationForm {
 
     }
 
-
-    public FormResponse getFormResponse() {
-        return formResponse;
-    }
 
 }

@@ -40,11 +40,11 @@ public class UserDaoImpl implements UserDao {
 
         try {
             connection.setAutoCommit(false);
-            preparedStatement = connection.prepareStatement("INSERT INTO users (username, password, suspend) " +
+            preparedStatement = connection.prepareStatement("INSERT INTO users (username, password, suspended) " +
                     "VALUES (?,?,?)");
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, user.getPassword());
-            preparedStatement.setBoolean(3, user.getSuspended());
+            preparedStatement.setString(3, String.valueOf(user.getSuspended()));
 
 
             if(preparedStatement.executeUpdate() == 1){
@@ -131,7 +131,7 @@ public class UserDaoImpl implements UserDao {
         try {
             connection.setAutoCommit(false);
             preparedStatement = connection.prepareStatement("UPDATE users SET suspended = ? WHERE username = ? ");
-            preparedStatement.setBoolean(1, user.getSuspended());
+            preparedStatement.setString(1, String.valueOf(user.getSuspended()));
             preparedStatement.setString(2, user.getUsername());
 
             if(preparedStatement.executeUpdate() == 1){
@@ -226,7 +226,7 @@ public class UserDaoImpl implements UserDao {
                 temp = new User();
                 temp.setUsername(resultSet.getString(2));
                 temp.setPassword(resultSet.getString(3));
-                temp.setSuspended(resultSet.getBoolean(4));
+                temp.setSuspended(Boolean.valueOf(resultSet.getString(4)));
 
                 list.add(temp);
             }
@@ -281,7 +281,7 @@ public class UserDaoImpl implements UserDao {
                 user = new User();
                 user.setUsername(resultSet.getString(2));
                 user.setPassword(resultSet.getString(3));
-                user.setSuspended(resultSet.getBoolean(4));
+                user.setSuspended(Boolean.valueOf(resultSet.getString(4)));
             }
 
         } catch (SQLException e) {

@@ -5,21 +5,20 @@ import java.io.Serializable;
 
 public class Options implements Serializable{
 
-    private Boolean neowaveAccepted;
+    private Boolean onlyNeowave;
     private Boolean adminReplaceUsersTokens;
     private Boolean userCreateAccount;
-    private Boolean homeProtected;
     private Boolean usersRegisterTheirOwnFirstToken;
     private Boolean usersAddNewTokens;
     private Boolean usersRemoveLastToken;
     private Boolean usersSeeDetails;
 
-    public Boolean getNeowaveAccepted() {
-        return neowaveAccepted;
+    public Boolean getOnlyNeowave() {
+        return onlyNeowave;
     }
 
-    public void setNeowaveAccepted(Boolean neowaveAccepted) {
-        this.neowaveAccepted = neowaveAccepted;
+    public void setOnlyNeowave(Boolean onlyNeowave) {
+        this.onlyNeowave = onlyNeowave;
     }
 
     public Boolean getAdminReplaceUsersTokens() {
@@ -36,14 +35,6 @@ public class Options implements Serializable{
 
     public void setUserCreateAccount(Boolean userCreateAccount) {
         this.userCreateAccount = userCreateAccount;
-    }
-
-    public Boolean getHomeProtected() {
-        return homeProtected;
-    }
-
-    public void setHomeProtected(Boolean homeProtected) {
-        this.homeProtected = homeProtected;
     }
 
     public Boolean getUsersRegisterTheirOwnFirstToken() {

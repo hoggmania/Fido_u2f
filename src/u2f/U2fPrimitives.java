@@ -86,6 +86,7 @@ public class U2fPrimitives {
         clientData.checkContent(REGISTER_TYPE, registerRequest.getChallenge(), Optional.fromNullable(facets));
 
         RawRegisterResponse rawRegisterResponse = RawRegisterResponse.fromBase64(response.getRegistrationData(), crypto);
+
         rawRegisterResponse.checkSignature(registerRequest.getAppId(), clientData.asJson());
         return rawRegisterResponse.createDevice();
     }

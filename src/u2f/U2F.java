@@ -75,7 +75,7 @@ public class U2F {
      * @param facets              A list of valid facets to verify against.
      * @return a DeviceRegistration object, holding information about the registered device. Servers should
      * persist this.
-     * @throws u2f.exceptions.U2fBadInputException
+     * @throws U2fBadInputException
      */
     public DeviceRegistration finishRegistration(RegisterRequestData registerRequestData, RegisterResponse response, Set<String> facets) throws U2fBadInputException {
         return primitives.finishRegistration(registerRequestData.getRegisterRequest(response), response, facets);
@@ -96,7 +96,7 @@ public class U2F {
      * @param devices                 the devices currently registered to the user.
      * @param facets                  A list of valid facets to verify against.
      * @return The (updated) DeviceRegistration that was authenticated against.
-     * @throws u2f.exceptions.U2fBadInputException
+     * @throws U2fBadInputException
      */
     public DeviceRegistration finishAuthentication(AuthenticateRequestData authenticateRequestData, AuthenticateResponse response, Iterable<? extends DeviceRegistration> devices, Set<String> facets) throws U2fBadInputException, DeviceCompromisedException {
         final AuthenticateRequest request = authenticateRequestData.getAuthenticateRequest(response);

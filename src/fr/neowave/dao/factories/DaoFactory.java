@@ -1,5 +1,7 @@
 package fr.neowave.dao.factories;
 
+import fr.neowave.dao.interfaces.LoggerDao;
+import fr.neowave.dao.interfaces.OptionsDao;
 import fr.neowave.dao.interfaces.RegistrationDao;
 import fr.neowave.dao.interfaces.UserDao;
 
@@ -19,4 +21,8 @@ public abstract class DaoFactory {
     public abstract UserDao getUserDao() throws SQLException;
 
     public abstract RegistrationDao getRegistrationDao() throws SQLException;
+
+    public abstract LoggerDao getLoggerDao() throws SQLException;
+
+    public abstract OptionsDao getOptionsDao() throws SQLException;
 }
