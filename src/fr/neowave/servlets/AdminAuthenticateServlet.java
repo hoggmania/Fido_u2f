@@ -15,6 +15,7 @@ import java.util.HashMap;
 
 @WebServlet("/adminAuthentication")
 public class AdminAuthenticateServlet extends HttpServlet {
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -23,18 +24,10 @@ public class AdminAuthenticateServlet extends HttpServlet {
     }
 
 
-    /*
-    * Si mon nom d'utilisateur est pas admin je retourne une erreur
-    * Sinon j'effectue la connexion grace à la méthode doAuthentication de la classe AuthentificationForm
-    *   S'il y a des erreurs je les renvoie
-    *   Sinon j'indique s'il a une clé enregistrée ou pas
-    *       S'il  a une clé enregistré on stocke dans la session la requete d'authentification de la clé ainsi que le nom d'utilisateur temporaire en horodatant la requete
-    *         puis on procede à l'authentification parclé
-    *       Sinon on stocke le nom d'utilisateur temporaire en l'horodatant puis on procède à l'enregistrement par clé  */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        if(!request.getParameter("username").equals("admin")){
+        if(request.getParameter("username") == null || !request.getParameter("username").equals("admin")){
             this.getServletContext().getRequestDispatcher("/WEB-INF/admin/passwordAuthentication.jsp").forward(request,response);
 
         }else{

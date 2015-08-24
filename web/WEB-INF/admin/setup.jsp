@@ -8,7 +8,7 @@
 <body>
 <jsp:include page="../default/nav.jsp" flush="true"/>
 
-${errors}
+${requestScope.errors}
 
 ${requestScope.options["usersSeeDetails"]}
 ${requestScope.options["usersSeeDetails"] == false}
@@ -18,8 +18,8 @@ ${requestScope.options["usersSeeDetails"] == false}
     <input name="onlyNeowave" type="radio" value="true" <c:if test="${requestScope.options[\"onlyNeowave\"]}">checked</c:if>>
     <input name="onlyNeowave" type="radio" value="false" <c:if test="${!requestScope.options[\"onlyNeowave\"]}">checked</c:if>>
     <br><br>adminReplaceUsersTokens
-    <input name="adminReplaceUsersTokens" type="radio" value="true" <c:if test="${requestScope.options[\"adminReplaceUsersTokens\"]}">checked</c:if>">
-    <input name="adminReplaceUsersTokens" type="radio" value="false" <c:if test="${!requestScope.options[\"adminReplaceUsersTokens\"]}">checked</c:if>">
+    <input name="adminReplaceUsersTokens" type="radio" value="true" <c:if test="${requestScope.options[\"adminReplaceUsersTokens\"]}">checked</c:if>>
+    <input name="adminReplaceUsersTokens" type="radio" value="false" <c:if test="${!requestScope.options[\"adminReplaceUsersTokens\"]}">checked</c:if>>
     <br><br>userCreateAccount
     <input name="userCreateAccount" type="radio" value="true" <c:if test="${requestScope.options[\"userCreateAccount\"]}">checked</c:if>>
     <input name="userCreateAccount" type="radio" value="false" <c:if test="${!requestScope.options[\"userCreateAccount\"]}">checked</c:if>>

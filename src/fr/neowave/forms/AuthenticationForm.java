@@ -28,12 +28,24 @@ public class AuthenticationForm extends Form{
     public void startAuthentication(HttpServletRequest request){
         try {
             if(canAuthenticate(request)){
+                user.setRegistrations(DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list(user.getUsername()));
                 if(user.getRegistrations() == null) {
+                    if(!user.getUsername().equals("admin")){
+                        request.getSession().setAttribute("u2fAuthenticated", false);
+                    }
                     request.getSession().setAttribute("hasKey", false);
                     request.getSession().setAttribute("username", user.getUsername());
+
                 } else {
+                    if(user.getUsername().equals("admin")){
+                        request.getSession().setAttribute("tempAdmin", user.getUsername());
+                    }
+                    else{
+
+                        request.getSession().setAttribute("u2fAuthenticated", false);
+                        request.getSession().setAttribute("username", user.getUsername());
+                    }
                     request.getSession().setAttribute("hasKey", true);
-                    if(user.getUsername().equals("admin")) request.getSession().setAttribute("tempAdmin", user.getUsername());
                 }
 
 
@@ -46,7 +58,7 @@ public class AuthenticationForm extends Form{
 
     private Boolean canAuthenticate(HttpServletRequest request) throws NoSuchAlgorithmException, SQLException, IOException, ClassNotFoundException, java.text.ParseException {
 
-        return areValidParameters(request) && nothingSuspended();
+        return (areValidParameters(request) && nothingSuspended());
 
     }
 
@@ -104,16 +116,6 @@ public class AuthenticationForm extends Form{
             return false;
         }
         else{
-            List<Registration> registrations = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list(user.getUsername());
-
-            if(registrations.isEmpty()) return true;
-            registrations.stream().filter(Registration::getSuspended).forEach(registrations::remove);
-
-            if (registrations.isEmpty()) {
-                this.setError(FormErrors.DEFAULT_ERR.toString(), "Your tokens are all suspended");
-                return false;
-            }
-            user.setRegistrations(registrations);
             return true;
         }
     }

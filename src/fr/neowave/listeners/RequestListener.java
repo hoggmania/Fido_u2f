@@ -68,7 +68,6 @@ public class RequestListener implements ServletRequestAttributeListener, Servlet
 
         String ip = null;
         for (String header : headers) {
-            System.out.println(((HttpServletRequest) servletRequestAttributeEvent.getServletRequest()).getHeader(header));
             if (request.getHeader(header) != null && request.getHeader(header).length() != 0 && !"unknown".equalsIgnoreCase(request.getHeader(header))) {
                 ip = request.getHeader(header);
             }

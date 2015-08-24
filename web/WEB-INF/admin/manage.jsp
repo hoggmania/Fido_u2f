@@ -8,10 +8,13 @@
 <body>
 <jsp:include page="../default/nav.jsp" flush="true"/>
 
+${requestScope.errors}
+
 <table>
     <tr>
-        <th> Action </th>
+        <th> Actions </th>
         <th> Username </th>
+        <th> Change password</th>
         <th> KeyHandle </th>
         <th> Public Key </th>
         <th> Counter </th>
@@ -29,6 +32,10 @@
             <form method="post" action="adminManage">
                 <input type="hidden" name="username" value="${user["username"]}">
                 <input type="submit" name="suspendUser" value="S">
+            </form>
+            <form method="post" action="adminManage">
+                <input type="hidden" name="username" value="${user["username"]}">
+                <input type="submit" name="addToken" value="AT">
             </form>
         </td>
         <td> ${user['username']} </td>
@@ -52,7 +59,9 @@
                         <input type="hidden" name="keyHandle" value="${registration["keyHandle"]}">
                         <input type="submit" name="suspendToken" value="ST">
                     </form>
+
                 </td>
+                <td></td>
                 <td></td>
                 <td> ${registration["keyHandle"]} </td>
                 <td> ${registration["publicKey"]}</td>

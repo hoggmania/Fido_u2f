@@ -7,7 +7,7 @@
 </jsp:include>
 <body>
 <jsp:include page="../default/nav.jsp" flush="true"/>
-
+${requestScope.errors}
 OMG THIS PROTECTED PAGE IS AWESOME !!!!!!!!!!
 </body>
 </html>

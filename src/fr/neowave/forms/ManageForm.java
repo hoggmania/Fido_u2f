@@ -45,10 +45,13 @@ public class ManageForm extends Form{
         try{
 
             if(validUsername(request.getParameter("username"))) {
-                if ((Boolean) request.getSession().getAttribute("hasKey")) {
+                if(user.getUsername().equals("admin")){
+                    this.setError(FormErrors.DEFAULT_ERR.toString(), "You cannot delete yourself");
+                }else{
                     DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getUserDao().delete(user);
                 }
-                else this.setError(FormErrors.DEFAULT_ERR.toString(), "You have to register at least one token to delete users");
+
+
             }
 
 
@@ -75,12 +78,15 @@ public class ManageForm extends Form{
         try{
 
             if(validUsername(request.getParameter("username"))) {
-                if ((Boolean) request.getSession().getAttribute("hasKey")) {
+                if(user.getUsername().equals("admin")){
+                    this.setError(FormErrors.DEFAULT_ERR.toString(), "You cannot suspend yourself");
+                }else{
                     user.setSuspended(!user.getSuspended());
                     DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getUserDao().updateSuspended(user);
                 }
-                else this.setError(FormErrors.DEFAULT_ERR.toString(), "You have to register at least one token to suspend users");
+
             }
+
 
 
         } catch (SQLException e) {
@@ -92,13 +98,15 @@ public class ManageForm extends Form{
         try{
 
             if(validUsername(request.getParameter("username"))) {
-                if ((Boolean) request.getSession().getAttribute("hasKey")) {
+                if(user.getUsername().equals("admin") && DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list("admin").size() < 2){
+                    this.setError(FormErrors.DEFAULT_ERR.toString(), "You cannot delete your last token");
+                }
+                else {
                     Registration toDelete = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().getRegistration(user.getUsername(), String.valueOf(request.getParameter("keyHandle")));
                     DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().delete(toDelete);
                 }
-                else this.setError(FormErrors.DEFAULT_ERR.toString(), "You have to register at least one token to delete token");
-            }
 
+            }
 
         } catch (SQLException | ClassNotFoundException | ParseException | IOException e) {
             this.setError(FormErrors.DEFAULT_ERR.toString(), e.getMessage());
@@ -108,13 +116,16 @@ public class ManageForm extends Form{
         try{
 
             if(validUsername(request.getParameter("username"))) {
-                if ((Boolean) request.getSession().getAttribute("hasKey")) {
+                if(user.getUsername().equals("admin") && DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list("admin").size() < 2){
+                    this.setError(FormErrors.DEFAULT_ERR.toString(), "You cannot suspend your last token");
+                }
+                else {
                     Registration toSuspend = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().getRegistration(user.getUsername(), String.valueOf(request.getParameter("keyHandle")));
                     toSuspend.setSuspended(!toSuspend.getSuspended());
                     DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().updateSuspended(toSuspend);
                 }
-                else this.setError(FormErrors.DEFAULT_ERR.toString(), "You have to register at least one token to suspend token");
             }
+
 
 
         } catch (SQLException | ClassNotFoundException | ParseException | IOException e) {
@@ -138,7 +149,6 @@ public class ManageForm extends Form{
             this.setError(FormErrors.DEFAULT_ERR.toString(), "User not found.");
             return false;
         }
-
         else {
 
             this.user = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getUserDao().getUser(username);

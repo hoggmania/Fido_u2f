@@ -22,6 +22,8 @@
       <ul>
         <li><a href="${pageContext.servletContext.contextPath}/index">Index</a></li>
         <li><a href="${pageContext.servletContext.contextPath}/u2fRegister">U2F registration</a></li>
+        <c:if test="${!sessionScope.u2fAuthenticated}"><li><a href="${pageContext.servletContext.contextPath}/u2fAuthenticate">U2F authentication</a></li></c:if>
+          <li><a href="${pageContext.servletContext.contextPath}/manage">Manage account</a></li>
         <li><a href="${pageContext.servletContext.contextPath}/passwordProtectedPage">Password protected page</a></li>
         <li><a href="${pageContext.servletContext.contextPath}/u2fProtectedPage">U2F protected page</a></li>
         <li><a href="${pageContext.servletContext.contextPath}/disconnection">Log out</a></li>

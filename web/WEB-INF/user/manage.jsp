@@ -1,17 +1,13 @@
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%--
-  Created by IntelliJ IDEA.
-  User: Elekhyr
-  Date: 24/08/2015
-  Time: 00:57
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html>
-<head>
-    <title>Manage</title>
-</head>
+<jsp:include page="../default/head.jsp" flush="true">
+  <jsp:param name="id" value="passwordAuthentication.jsp"/>
+  <jsp:param name="title" value="Password authentication"/>
+</jsp:include>
 <body>
+<jsp:include page="../default/nav.jsp" flush="true"/>
+${requestScope.errors}
 <c:forEach items="${requestScope.registrations}" var="registration">
   <tr>
     <td>

@@ -15,12 +15,13 @@ import java.io.IOException;
 public class ManageServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
-        if(request.getSession().getAttribute("username") == null || request.getSession().getAttribute("username").equals("admin")){
+        if(request.getSession().getAttribute("username") == null || request.getSession().getAttribute("username").equals("admin")
+                || request.getSession().getAttribute("u2fAuthenticated").equals(false)){
             response.sendRedirect(request.getContextPath().concat("/index"));
         }
         else{
             UsersTokenForm usersTokenForm = new UsersTokenForm();
-           usersTokenForm.showToken(request);
+            usersTokenForm.showToken(request);
             if(usersTokenForm.getErrors().isEmpty()){
                 request.setAttribute("registrations", usersTokenForm.getObject());
             }else{
@@ -33,12 +34,23 @@ public class ManageServlet extends HttpServlet {
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException{
-        if(request.getSession().getAttribute("username") == null || request.getSession().getAttribute("username").equals("admin")){
+        if(request.getSession().getAttribute("username") == null || request.getSession().getAttribute("username").equals("admin")
+            || request.getSession().getAttribute("u2fAuthenticated").equals(false)){
             response.sendRedirect(request.getContextPath().concat("/index"));
         }
         else{
+
             UsersTokenForm usersTokenForm = new UsersTokenForm();
-            usersTokenForm.deleteToken(request);
+
+            if(request.getParameter("changePassword")!= null && request.getParameter("changePassword").equals("CP")){
+                usersTokenForm.changePassword(request);
+            }else if(request.getParameter("deleteToken") != null && request.getParameter("deleteToken").equals("DT")){
+                usersTokenForm.deleteToken(request);
+            }
+            else {
+                request.setAttribute("errors", "fail");
+            }
+
             if (usersTokenForm.getErrors().isEmpty()){
                 request.setAttribute("success", usersTokenForm.getMessage());
                 usersTokenForm.showToken(request);
@@ -47,8 +59,7 @@ public class ManageServlet extends HttpServlet {
                 }else{
                     request.setAttribute("errors", usersTokenForm.getErrors());
                 }
-            }
-            else{
+            } else {
                 request.setAttribute("errors", usersTokenForm.getErrors());
             }
             this.getServletContext().getRequestDispatcher("/WEB-INF/user/manage.jsp").forward(request,response);

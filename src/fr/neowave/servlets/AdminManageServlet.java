@@ -2,6 +2,7 @@ package fr.neowave.servlets;
 
 import com.sun.org.apache.xpath.internal.operations.Bool;
 import fr.neowave.forms.ManageForm;
+import fr.neowave.forms.U2fRegistrationForm;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -20,7 +21,8 @@ public class AdminManageServlet extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
-        if(request.getSession().getAttribute("username") == null || !request.getSession().getAttribute("username").equals("admin")){
+        if(request.getSession().getAttribute("username") == null || !request.getSession().getAttribute("username").equals("admin")
+                || request.getSession().getAttribute("hasKey").equals(false)){
             response.sendRedirect(request.getContextPath().concat("/404"));
         }
         else{
@@ -40,7 +42,8 @@ public class AdminManageServlet extends HttpServlet {
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException{
-        if(request.getSession().getAttribute("username") == null || !request.getSession().getAttribute("username").equals("admin")){
+        if(request.getSession().getAttribute("username") == null || !request.getSession().getAttribute("username").equals("admin")
+                || request.getSession().getAttribute("hasKey").equals(false)){
             response.sendRedirect(request.getContextPath().concat("/404"));
         }
         else{
@@ -58,16 +61,23 @@ public class AdminManageServlet extends HttpServlet {
             }
             else if(request.getParameter("change") != null){
                 manageForm.changePassword(request);
+            }
+            else if(request.getParameter("addToken") != null){
+                U2fRegistrationForm registrationForm = new U2fRegistrationForm();
+                registrationForm.startU2fRegistration(request);
+                if(manageForm.getErrors().isEmpty()){
+                    response.sendRedirect(request.getContextPath().concat("/adminU2fRegister"));
+                    return;
+                }
             }else{
                 request.setAttribute("errors", new HashMap<String, String>().put("default", "c pa bn"));
             }
+
             manageForm.showUsers(request);
-            if(manageForm.getErrors().isEmpty()){
-                request.setAttribute("users", manageForm.getUsers());
-            }
-            else{
+            if(!manageForm.getErrors().isEmpty()){
                 request.setAttribute("errors", manageForm.getErrors());
             }
+            request.setAttribute("users", manageForm.getUsers());
             this.getServletContext().getRequestDispatcher("/WEB-INF/admin/manage.jsp").forward(request,response);
 
         }

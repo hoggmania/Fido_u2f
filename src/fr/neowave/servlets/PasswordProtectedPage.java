@@ -11,8 +11,8 @@ import java.io.IOException;
 public class PasswordProtectedPage extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if(request.getSession().getAttribute("username") != null){
-            this.getServletContext().getRequestDispatcher("/WEB-INF/user/passwordProtectedPage.jsp");
+        if(request.getSession().getAttribute("username") != null && !request.getSession().getAttribute("username").equals("admin") ){
+            this.getServletContext().getRequestDispatcher("/WEB-INF/user/passwordProtectedPage.jsp").forward(request, response);
         }
         else {
             response.sendRedirect(request.getContextPath().concat("/authentication"));

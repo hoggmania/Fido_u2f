@@ -23,12 +23,7 @@ public class AdminU2FRegisterServlet extends HttpServlet {
 
     }
 
-    /*
-    Si l'utilisateur n'est pas un admin => 404 error
-    Sinon s'il est admin
-        Si le challenge a été envoyé à la clé et qu'elle a répondu, on procède à l'enregistrement de celle ci
-            Si l'enregistrement s'est bien passsé on se redirige vers
-     */
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession();

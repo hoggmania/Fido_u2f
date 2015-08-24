@@ -8,8 +8,8 @@
 <body>
 <jsp:include page="../default/nav.jsp" flush="true"/>
 
-<form action="u2fRegister" method="post"><input type="submit" value="go"></form>
-
+<form action="u2fRegister" method="post"><input type="submit" name="register" value="register"></form>
+${requestScope.errors}
 <c:if test="${sessionScope.registrationChallenge != null}">
     Put your key you bastard
   <script language="JavaScript" >
@@ -22,23 +22,30 @@
       console.log(clientData);
       u2f.register([clientData], sigs, function(response){
         if(response.errorCode){
-          console.log(response.errorCode);
-          // window.location.href = window.location.hostname+"/adminAuthentication"
+            console.log(response.errorCode);
+
+            /*var param = ${!empty(param.from) ? param.from : 'null'};
+            window.location.href = param != null ? param : window.location.protocol+"//"+window.location.host+"/"+window.location.pathname.split('/')[1]+'/index'*/
         }
         else{
-          console.log(response);
-          var form = document.createElement("form");
-          form.setAttribute("method", "post");
-          form.setAttribute("action", "u2fRegister");
-          var field = document.createElement("input");
-          field.setAttribute("type", "hidden");
-          field.setAttribute("name", "response");
-          field.setAttribute("value", JSON.stringify(response));
-          form.appendChild(field);
-          form.submit();
+            console.log(response);
+            var form = document.createElement("form");
+            form.setAttribute("method", "post");
+            form.setAttribute("action", "u2fRegister");
+            var hidden = document.createElement("input");
+            hidden.setAttribute("type", "hidden");
+            hidden.setAttribute("name", "from");
+            hidden.setAttribute("value", ${param.from ? param.from : "null"});
+            var field = document.createElement("input");
+            field.setAttribute("type", "hidden");
+            field.setAttribute("name", "response");
+            field.setAttribute("value", JSON.stringify(response));
+            form.appendChild(hidden);
+            form.appendChild(field);
+            form.submit();
         }
 
-      },60);
+      },5);
     });
 
   </script>

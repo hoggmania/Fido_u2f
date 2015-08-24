@@ -25,6 +25,7 @@ import java.security.cert.CertificateException;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -37,37 +38,56 @@ public class U2fAuthenticationForm extends Form {
         List<Registration> registrations;
         Options options ;
         try {
-            registrations = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list(String.valueOf(request.getSession().getAttribute("tempUsername")));
-            options = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getOptionsDao().getOptions();
-            if (request.getSession().getAttribute("username") == null && options.getAdminReplaceUsersTokens()){
-                registrations.addAll(DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list("admin"));
+            if(request.getSession().getAttribute("tempUsername") != null){
+
+                registrations = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list(String.valueOf(request.getSession().getAttribute("tempUsername")));
+
+            } else{
+
+                options = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getOptionsDao().getOptions();
+                registrations = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list(String.valueOf(
+                        request.getSession().getAttribute("tempAdmin") == null ? request.getSession().getAttribute("username") : "admin"));
+                if (request.getSession().getAttribute("username") != null && !request.getSession().getAttribute("username").equals("admin") && options.getAdminReplaceUsersTokens()){
+                    registrations.addAll(DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list("admin"));
+                }
+            }
+            if(registrations.isEmpty()){
+                this.setError(FormErrors.DEFAULT_ERR.toString(), "You don't have any registered token");
+            }else{
+                for (int i = 0; i < registrations.size(); ++i){
+                    if(registrations.get(i).getSuspended()) registrations.remove(i);
+                }
+                if(registrations.isEmpty()){
+                    this.setError(FormErrors.DEFAULT_ERR.toString(), "Your tokens are all suspended");
+                }
+                else{
+                    uri = new URI(request.getRequestURL().toString());
+
+
+                    List<DeviceRegistration> deviceRegistrations = registrations.stream().map(registration -> new DeviceRegistration(registration.getKeyHandle(), registration.getPublicKey(), registration.getCertificate(),
+                            registration.getCounter())).collect(Collectors.toList());
+
+                    List<AuthenticateRequest> authenticateRequests = u2f.startAuthentication(uri.getScheme().concat("://").concat(uri.getHost())
+                            .concat(":").concat(String.valueOf(uri.getPort())), deviceRegistrations)
+                            .getAuthenticateRequests();
+
+
+                    stringBuilder.append("{\"authenticateRequests\":[");
+
+                    if(!authenticateRequests.isEmpty()){
+                        for(AuthenticateRequest authenticateRequest : authenticateRequests)
+                            stringBuilder.append(authenticateRequest.toJson().concat(","));
+                        stringBuilder.deleteCharAt(stringBuilder.length()-1);
+                        stringBuilder.append("]");
+                    }
+                    stringBuilder.append("}");
+
+                    request.getSession().setAttribute("authenticationChallenge", stringBuilder.toString());
+                    request.getSession().setAttribute("timeStamp", System.currentTimeMillis());
+                    this.setMessage("Please connect your token");
+                }
             }
 
-
-            uri = new URI(request.getRequestURL().toString());
-
-
-            List<DeviceRegistration> deviceRegistrations = registrations.stream().map(registration -> new DeviceRegistration(registration.getKeyHandle(), registration.getPublicKey(), registration.getCertificate(),
-                    registration.getCounter())).collect(Collectors.toList());
-
-            List<AuthenticateRequest> authenticateRequests = u2f.startAuthentication(uri.getScheme().concat("://").concat(uri.getHost())
-                    .concat(":").concat(String.valueOf(uri.getPort())), deviceRegistrations)
-                    .getAuthenticateRequests();
-
-
-            stringBuilder.append("{\"authenticateRequests\":[");
-
-            if(!authenticateRequests.isEmpty()){
-                for(AuthenticateRequest authenticateRequest : authenticateRequests)
-                    stringBuilder.append(authenticateRequest.toJson().concat(","));
-                stringBuilder.deleteCharAt(stringBuilder.length()-1);
-                stringBuilder.append("]");
-            }
-            stringBuilder.append("}");
-
-            request.getSession().setAttribute("authenticationChallenge", stringBuilder.toString());
-            request.getSession().setAttribute("timeStamp", System.currentTimeMillis());
-            this.setMessage("Please connect your token");
 
         } catch (URISyntaxException | NoEligableDevicesException | ClassNotFoundException | SQLException | IOException | ParseException e) {
             this.setError(FormErrors.DEFAULT_ERR.toString(), e.getMessage());
@@ -78,8 +98,15 @@ public class U2fAuthenticationForm extends Form {
         U2F u2f = new U2F();
         String authenticationRequests = String.valueOf(request.getSession().getAttribute("authenticationChallenge"));
         request.getSession().removeAttribute("authenticationChallenge");
-        String username = String.valueOf(request.getSession().getAttribute("tempUsername"));
-        request.getSession().removeAttribute("tempUsername");
+        String username;
+        Options options;
+        if(request.getSession().getAttribute("tempAdmin") != null){
+            username = String.valueOf(request.getSession().getAttribute("tempAdmin"));
+            request.getSession().removeAttribute("tempAdmin");
+        }else {
+            username = String.valueOf(request.getSession().getAttribute("username"));
+        }
+
         Long timestamp = Long.valueOf(String.valueOf(request.getSession().getAttribute("timeStamp")));
         request.getSession().removeAttribute("timeStamp");
         try {
@@ -91,27 +118,52 @@ public class U2fAuthenticationForm extends Form {
                     .concat(temp.get("authenticateRequests").toString().equals("{}") ? "" : temp.get("authenticateRequests").toString())
                     .concat("}"));
 
-
             AuthenticateResponse authenticateResponse = AuthenticateResponse.fromJson(request.getParameter("response"));
+
+            options = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getOptionsDao().getOptions();
+
+
             List<Registration> registrations = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list(username);
-            List<DeviceRegistration> deviceRegistrations = registrations.stream().map(registration -> new DeviceRegistration(registration.getKeyHandle(), registration.getPublicKey(), registration.getCertificate(),
-                    registration.getCounter())).collect(Collectors.toList());
+            if (options.getAdminReplaceUsersTokens() && !username.equals("admin"))
+                registrations.addAll(DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list("admin"));
 
-            DeviceRegistration deviceRegistration = u2f.finishAuthentication(authenticateRequestData, authenticateResponse, deviceRegistrations);
+            if(registrations.isEmpty()){
+                this.setError(FormErrors.DEFAULT_ERR.toString(), "You don't have any registered token");
+            }else {
+                for (int i = 0; i < registrations.size(); ++i) {
+                    if (registrations.get(i).getSuspended()) registrations.remove(i);
+                }
+                if (registrations.isEmpty()) {
+                    this.setError(FormErrors.DEFAULT_ERR.toString(), "Your tokens are all suspended");
+                } else {
+                    List<DeviceRegistration> deviceRegistrations = registrations.stream().map(registration -> new DeviceRegistration(registration.getKeyHandle(), registration.getPublicKey(), registration.getCertificate(),
+                            registration.getCounter())).collect(Collectors.toList());
 
-            JSONObject counter = (JSONObject) new JSONParser().parse(deviceRegistration.toJson());
+                    DeviceRegistration deviceRegistration = u2f.finishAuthentication(authenticateRequestData, authenticateResponse, deviceRegistrations);
 
-            Registration registration = new Registration();
+                    JSONObject counter = (JSONObject) new JSONParser().parse(deviceRegistration.toJson());
 
-            registration.setKeyHandle(deviceRegistration.getKeyHandle());
-            registration.setPublicKey(deviceRegistration.getPublicKey());
-            registration.setCertificate(deviceRegistration.getAttestationCertificate());
-            registration.setCounter(Long.valueOf(counter.get("counter").toString()));
+                    Registration registration = new Registration();
 
-            registration.setUsername(username);
-            DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().updateCounter(registration);
-            request.getSession().setAttribute("username", username);
-            this.setMessage("you are connected");
+                    registration.setKeyHandle(deviceRegistration.getKeyHandle());
+                    registration.setPublicKey(deviceRegistration.getPublicKey());
+                    registration.setCertificate(deviceRegistration.getAttestationCertificate());
+                    registration.setCounter(Long.valueOf(counter.get("counter").toString()));
+
+                    registrations.stream().filter(registration1 -> registration1.getUsername().equals("admin") && Objects.equals(registration.getKeyHandle(), registration1.getKeyHandle())).forEach(registration1 -> registration.setUsername("admin"));
+                    if(registration.getUsername() == null) registration.setUsername(username);
+                    DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().updateCounter(registration);
+
+                    if (!username.equals("admin")) {
+                        request.getSession().setAttribute("u2fAuthenticated", true);
+                    } else {
+                        request.getSession().setAttribute("username", username);
+                    }
+
+                    this.setMessage("Token authenticated");
+                }
+            }
+
 
         } catch (TimeoutException | org.json.simple.parser.ParseException | U2fBadInputException | U2fBadConfigurationException | NoSuchFieldException | SQLException | CertificateException | ClassNotFoundException | DeviceCompromisedException | IOException | ParseException e) {
             this.setError(FormErrors.DEFAULT_ERR.toString(), e.getMessage() != null ? e.getMessage() : "Unknown error");

@@ -8,6 +8,7 @@
 <body>
 <jsp:include page="../default/nav.jsp" flush="true"/>
 
+${requestScope.errors}
 
 <c:if test="${sessionScope.registrationChallenge != null}">
     <script language="JavaScript" >

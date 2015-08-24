@@ -14,17 +14,19 @@ public class AdminU2FAuthenticateServlet extends HttpServlet {
 
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if(request.getSession().getAttribute("tempAdmin") != null || !request.getSession().getAttribute("tempAdmin").equals("admin")){
-            this.getServletContext().getRequestDispatcher("/WEB-INF/admin/u2fAuthentication.jsp").forward(request,response);
-        }else{
+        if(request.getSession().getAttribute("tempAdmin") == null || !request.getSession().getAttribute("tempAdmin").equals("admin")
+                || request.getSession().getAttribute("hasKey").equals(false)){
             response.sendRedirect(request.getContextPath().concat("/404"));
+        }else{
+            this.getServletContext().getRequestDispatcher("/WEB-INF/admin/u2fAuthentication.jsp").forward(request,response);
         }
 
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if(request.getSession().getAttribute("tempAdmin") == null || !request.getSession().getAttribute("tempAdmin").equals("admin")){
+        if(request.getSession().getAttribute("tempAdmin") == null || !request.getSession().getAttribute("tempAdmin").equals("admin")
+                || request.getSession().getAttribute("hasKey").equals(false)){
             response.sendRedirect(request.getContextPath().concat("/404"));
         }
         else{

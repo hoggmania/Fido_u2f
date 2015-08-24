@@ -26,6 +26,7 @@ public class DisconnectionServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response){
        try{
 
+           Boolean admin = request.getSession().getAttribute("username") != null && request.getSession().getAttribute("username").equals("admin");
            if(request.getSession().getAttribute("username") != null)request.getSession().invalidate();
            logger.setServerSessionId(request.getSession().getId());
            DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -37,7 +38,13 @@ public class DisconnectionServlet extends HttpServlet {
            } catch (SQLException | IOException e) {
                e.printStackTrace();
            }
-           response.sendRedirect(request.getContextPath().concat("/authentication"));
+           if (admin){
+
+               response.sendRedirect(request.getContextPath().concat("/adminAuthentication"));
+           }else{
+
+               response.sendRedirect(request.getContextPath().concat("/authentication"));
+           }
 
         } catch (IOException e) {
             e.printStackTrace();

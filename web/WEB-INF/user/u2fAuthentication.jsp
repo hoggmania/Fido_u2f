@@ -8,24 +8,25 @@
 <body>
 <jsp:include page="../default/nav.jsp" flush="true"/>
 
+${requestScope.errors}
 
 <form action="u2fAuthenticate" method="post">
-  <input type="submit" value="authenticate">
+  <input type="submit" name="authenticate" value="authenticate">
 </form>
-<c:if test="${sessionScope.authenticationChallenge != null}">
-  Put your key you bastard
+
+${requestScope.authenticationChallenge}
+<c:if test="${requestScope.authenticationChallenge != null}">
   <script language="JavaScript" >
     $(document).ready(function(){
 
-      var request = JSON.parse('<c:out value="${sessionScope.authenticationChallenge}" escapeXml="false" />');
+      var request = JSON.parse('<c:out value="${requestScope.authenticationChallenge}" escapeXml="false" />');
       console.log(request);
       var clientData = request['authenticateRequests'];
 
       console.log(clientData);
       u2f.sign(clientData, function(response){
         if(response.errorCode){
-          console.log(response.errorCode)
-          window.location.href = window.location.hostname+"/adminAuthentication"
+          console.log(response.errorCode);
         }
         else{
           console.log(response);

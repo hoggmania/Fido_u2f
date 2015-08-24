@@ -20,7 +20,7 @@ public class SignUpServlet extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
-        if(request.getSession().getAttribute("username") == null ||  request.getSession().getAttribute("username").equals("admin") ){
+        if(request.getSession().getAttribute("username") == null || request.getSession().getAttribute("username").equals("admin") ){
             this.getServletContext().getRequestDispatcher("/WEB-INF/user/signUp.jsp").forward(request, response);
         }
         else{
@@ -38,11 +38,13 @@ public class SignUpServlet extends HttpServlet {
 
         if(registrationForm.getErrors().isEmpty()){
 
-            if(request.getSession().getAttribute("username") != null || !request.getSession().getAttribute("username").equals("admin")){
+            if(request.getSession().getAttribute("username") != null && !request.getSession().getAttribute("username").equals("admin")){
                 response.sendRedirect(request.getContextPath().concat("/index"));
             }
             else{
                 session.setAttribute("username", user.getUsername());
+                request.getSession().setAttribute("hasKey", false);
+                request.getSession().setAttribute("u2fAuthenticated", false);
                 session.setMaxInactiveInterval(86400000);
                 response.sendRedirect(request.getContextPath().concat("/index"));
             }
@@ -51,7 +53,8 @@ public class SignUpServlet extends HttpServlet {
         else{
             session.setAttribute("username", null);
             request.setAttribute("username", request.getParameter("username"));
-            request.setAttribute("error", registrationForm.getErrors());
+
+            request.setAttribute("errors", registrationForm.getErrors());
             this.getServletContext().getRequestDispatcher("/WEB-INF/user/signUp.jsp").forward(request, response);
         }
     }

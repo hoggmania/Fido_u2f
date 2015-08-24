@@ -42,4 +42,8 @@ public class UsersTokenForm extends Form {
             this.setError("default", e.getMessage());
         }
     }
+
+    public void changePassword(HttpServletRequest request){
+
+    }
 }

@@ -11,7 +11,8 @@ import java.io.IOException;
 public class AdminLogServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if(request.getSession().getAttribute("username") == null || !request.getSession().getAttribute("username").equals("admin")){
+        if(request.getSession().getAttribute("username") == null || !request.getSession().getAttribute("username").equals("admin")
+                || request.getSession().getAttribute("hasKey").equals(false)){
             response.sendRedirect(request.getContextPath().concat("/404"));
         }
         else{
@@ -25,7 +26,8 @@ public class AdminLogServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        if(request.getSession().getAttribute("username") == null || !request.getSession().getAttribute("username").equals("admin")){
+        if(request.getSession().getAttribute("username") == null || !request.getSession().getAttribute("username").equals("admin")
+                || request.getSession().getAttribute("hasKey").equals(false)){
             response.sendRedirect(request.getContextPath().concat("/404"));
         } else{
             if(!Boolean.valueOf(String.valueOf(request.getSession().getAttribute("hasKey")))) {

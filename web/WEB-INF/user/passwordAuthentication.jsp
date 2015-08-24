@@ -8,7 +8,7 @@
 <body>
 <jsp:include page="../default/nav.jsp" flush="true"/>
 
-
+${requestScope.errors}
 <c:if test="${form.errors['default'] != null}">
     <div id="defaultError">
             ${form.errors["default"]}

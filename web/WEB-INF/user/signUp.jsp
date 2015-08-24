@@ -10,6 +10,7 @@
 <body>
 <jsp:include page="../default/nav.jsp" flush="true"/>
 
+${requestScope.errors}
 <c:if test="${errors['default'] != null}">
   <div id="defaultError">
           ${errors["default"]}

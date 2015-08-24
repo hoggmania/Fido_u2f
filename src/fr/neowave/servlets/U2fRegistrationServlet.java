@@ -25,7 +25,7 @@ public class U2fRegistrationServlet extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
-        if(request.getSession().getAttribute("username") == null){
+        if(request.getSession().getAttribute("username") == null || request.getSession().getAttribute("username").equals("admin")){
             response.sendRedirect(request.getContextPath().concat("/index"));
         }
         else{
@@ -34,7 +34,7 @@ public class U2fRegistrationServlet extends HttpServlet {
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException{
-        if(request.getSession().getAttribute("username") == null){
+        if(request.getSession().getAttribute("username") == null || request.getSession().getAttribute("username").equals("admin")){
             response.sendRedirect(request.getContextPath().concat("/index"));
         }
         else {

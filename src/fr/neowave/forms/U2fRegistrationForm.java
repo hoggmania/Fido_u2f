@@ -5,6 +5,7 @@ import fr.neowave.beans.Registration;
 import fr.neowave.dao.factories.DaoFactory;
 import fr.neowave.dao.factories.FactoryType;
 import fr.neowave.forms.Exceptions.FormErrors;
+import fr.neowave.forms.Exceptions.OptionsException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -19,6 +20,7 @@ import u2f.exceptions.U2fBadInputException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.cert.CertificateException;
@@ -39,49 +41,52 @@ public class U2fRegistrationForm extends Form {
         Options options;
 
 
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("{\"registerRequests\" :");
+        StringBuilder stringBuilder;
+
         try {
             options = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getOptionsDao().getOptions();
-            if(!request.getSession().getAttribute("username").equals("admin") || (request.getSession().getAttribute("username").equals("admin"))){
-                username = String.valueOf(request.getSession().getAttribute("username"));
-                if(!options.getUsersAddNewTokens() && !request.getSession().getAttribute("username").equals("admin") && !(Boolean) request.getSession().getAttribute("hasKey")){
-                    throw new Exception("Option 6) a) activated, you can't add token");
-                }
-
-                if(!options.getUsersRegisterTheirOwnFirstToken() && !request.getSession().getAttribute("username").equals("admin") && !(Boolean) request.getSession().getAttribute("hasKey")){
-                    throw new Exception("Option 5) a) activated, you can't add your first token");
-                }
-            }
-            else{
+            if(request.getSession().getAttribute("username").equals("admin") && request.getSession().getAttribute("hasKey").equals(true)){
                 username = request.getParameter("username");
+                request.getSession().setAttribute("tempUser", username);
+            } else{
+                username = String.valueOf(request.getSession().getAttribute("username"));
             }
-            uri = new URI(request.getRequestURL().toString());
 
-            List<Registration> registrations = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list(username);
+            if(!options.getUsersAddNewTokens() && !request.getSession().getAttribute("username").equals("admin") && (Boolean) request.getSession().getAttribute("hasKey")){
+                this.setError("default", "Option 6) a) activated, you can't add token");
+            }else if(!options.getUsersRegisterTheirOwnFirstToken() && !request.getSession().getAttribute("username").equals("admin") && !(Boolean) request.getSession().getAttribute("hasKey")){
+                this.setError("default", "Option 5) a) activated, you can't add your first token");
+            }else {
+                uri = new URI(request.getRequestURL().toString());
+                stringBuilder = new StringBuilder();
 
-            List<DeviceRegistration> deviceRegistrations = registrations.stream().map(registration -> new DeviceRegistration(registration.getKeyHandle(), registration.getPublicKey(), registration.getCertificate(),
-                    registration.getCounter())).collect(Collectors.toList());
+                stringBuilder.append("{\"registerRequests\" :");
 
-            RegisterRequestData registerRequestData = u2f.startRegistration(uri.getScheme().concat("://").concat(uri.getHost()).concat(":")
-                    .concat(String.valueOf(uri.getPort())), deviceRegistrations);
-            List<RegisterRequest> registerRequests = registerRequestData.getRegisterRequests();
-            stringBuilder.append(registerRequests.get(0).toJson());
+                List<Registration> registrations = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list(username);
+
+                List<DeviceRegistration> deviceRegistrations = registrations.stream().map(registration -> new DeviceRegistration(registration.getKeyHandle(), registration.getPublicKey(), registration.getCertificate(),
+                        registration.getCounter())).collect(Collectors.toList());
+
+                RegisterRequestData registerRequestData = u2f.startRegistration(uri.getScheme().concat("://").concat(uri.getHost()).concat(":")
+                        .concat(String.valueOf(uri.getPort())), deviceRegistrations);
+                List<RegisterRequest> registerRequests = registerRequestData.getRegisterRequests();
+                stringBuilder.append(registerRequests.get(0).toJson());
 
 
-            List<AuthenticateRequest> authenticateRequests = registerRequestData.getAuthenticateRequests();
-            stringBuilder.append(", \"authenticateRequests\" : [");
-            if(!authenticateRequests.isEmpty()){
-                for(AuthenticateRequest authenticateRequest : authenticateRequests)
-                    stringBuilder.append(authenticateRequest.toJson().concat(","));
-                stringBuilder.deleteCharAt(stringBuilder.length()-1);
+                List<AuthenticateRequest> authenticateRequests = registerRequestData.getAuthenticateRequests();
+                stringBuilder.append(", \"authenticateRequests\" : [");
+                if(!authenticateRequests.isEmpty()){
+                    for(AuthenticateRequest authenticateRequest : authenticateRequests)
+                        stringBuilder.append(authenticateRequest.toJson().concat(","));
+                    stringBuilder.deleteCharAt(stringBuilder.length()-1);
 
+                }
+                stringBuilder.append("]}");
+                request.getSession().setAttribute("registrationChallenge", stringBuilder.toString());
+                this.setMessage("Please, connect your u2f token");
             }
-            stringBuilder.append("]}");
-            request.getSession().setAttribute("registrationChallenge", stringBuilder.toString());
-            this.setMessage("Please, connect your u2f token");
-
-        } catch (Exception e) {
+        } catch (RuntimeException | java.text.ParseException | IOException | URISyntaxException | ClassNotFoundException | SQLException e) {
+            System.out.println(e);
             this.setError(FormErrors.DEFAULT_ERR.toString(), e.getMessage());
         }
     }
@@ -91,11 +96,11 @@ public class U2fRegistrationForm extends Form {
         String registrationChallenge = String.valueOf(request.getSession().getAttribute("registrationChallenge"));
         request.getSession().removeAttribute("registrationChallenge");
         String username;
-        if(!request.getSession().getAttribute("username").equals("admin") || (request.getSession().getAttribute("username").equals("admin") && !(Boolean) request.getSession().getAttribute("hasKey"))){
+        if(request.getSession().getAttribute("username").equals("admin") && request.getSession().getAttribute("hasKey").equals(true)){
+            username = String.valueOf(request.getSession().getAttribute("tempUser"));
+            request.getSession().removeAttribute("tempUser");
+        } else{
             username = String.valueOf(request.getSession().getAttribute("username"));
-        }
-        else{
-            username = request.getParameter("username");
         }
         try {
 
@@ -125,8 +130,8 @@ public class U2fRegistrationForm extends Form {
             registration.setTimestamp(dateFormat.format(date));
             registration.setSuspended(false);
             registration.setUsername(username);
-            registration.setHostname(request.getRequestURI());
 
+            registration.setHostname(InetAddress.getByName(getClientIpAddress(request)).getHostName());
             DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().create(registration);
             request.getSession().setAttribute("hasKey", true);
             this.setMessage("Key has been added");
@@ -136,5 +141,28 @@ public class U2fRegistrationForm extends Form {
         }
 
 
+    }
+
+    private static final String[] HEADERS_TO_TRY = {
+            "X-Forwarded-For",
+            "Proxy-Client-IP",
+            "WL-Proxy-Client-IP",
+            "HTTP_X_FORWARDED_FOR",
+            "HTTP_X_FORWARDED",
+            "HTTP_X_CLUSTER_CLIENT_IP",
+            "HTTP_CLIENT_IP",
+            "HTTP_FORWARDED_FOR",
+            "HTTP_FORWARDED",
+            "HTTP_VIA",
+            "REMOTE_ADDR" };
+
+    public static String getClientIpAddress(HttpServletRequest request) {
+        for (String header : HEADERS_TO_TRY) {
+            String ip = request.getHeader(header);
+            if (ip != null && ip.length() != 0 && !"unknown".equalsIgnoreCase(ip)) {
+                return ip;
+            }
+        }
+        return request.getRemoteAddr();
     }
 }
