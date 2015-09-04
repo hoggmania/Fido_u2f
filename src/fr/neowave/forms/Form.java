@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Formulaire de renvoie, classe mère de tous les formulaires
+ */
 public class Form {
 
     private String message;

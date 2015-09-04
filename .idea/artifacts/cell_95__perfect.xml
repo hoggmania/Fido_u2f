@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" build-on-make="true" name="cell_95%_perfect">
+    <output-path>/media/elekhyr/Public5</output-path>
+    <root id="archive" name="cell_95%_perfect.war">
+      <element id="artifact" artifact-name="fido:war exploded" />
+    </root>
+  </artifact>
+</component>

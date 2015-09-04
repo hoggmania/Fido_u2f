@@ -1,14 +1,16 @@
 package fr.neowave.dao.mysql;
 
 import fr.neowave.beans.Logger;
-import fr.neowave.beans.Registration;
 import fr.neowave.dao.interfaces.LoggerDao;
-import sun.rmi.runtime.Log;
 
-import java.io.*;
-import java.security.cert.X509Certificate;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class LoggerDaoImpl implements LoggerDao {
@@ -27,18 +29,27 @@ public class LoggerDaoImpl implements LoggerDao {
         connection.setAutoCommit(false);
         try {
 
-            preparedStatement = connection.prepareStatement("INSERT INTO logs (serverSessionId, username, userAgent, " +
-                    "ip, reverseName, dateTimeStart, dateTimeEnd, endType, serverChallenge, error) VALUES (?,?,?,?,?,?,?,?,?,?)");
+            preparedStatement = connection.prepareStatement("INSERT INTO logs (serverSessionId, message, context, username, browserName, browserVersion, " +
+                    "osName, osVersion, ip, reverseName, requestParameters, requestAttributes, requestErrors, sessionAttributes," +
+                    "dateTimeStart, dateTimeEnd, endType) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
             preparedStatement.setString(1, log.getServerSessionId());
-            preparedStatement.setString(2, log.getUsername());
-            preparedStatement.setString(3, log.getUserAgent());
-            preparedStatement.setString(4, log.getIp());
-            preparedStatement.setString(5, log.getReverseName());
-            preparedStatement.setString(6, log.getDateTimeStart());
-            preparedStatement.setString(7, log.getDateTimeEnd());
-            preparedStatement.setString(8, log.getEndType());
-            preparedStatement.setString(9, log.getServerChallenge());
-            preparedStatement.setString(10, log.getError());
+            preparedStatement.setString(2, log.getMessage());
+            preparedStatement.setString(3, log.getContext());
+            preparedStatement.setString(4, log.getUsername());
+            preparedStatement.setString(5, log.getBrowserName());
+            preparedStatement.setString(6, log.getBrowserVersion());
+            preparedStatement.setString(7, log.getOsName());
+            preparedStatement.setString(8, log.getOsVersion());
+            preparedStatement.setString(9, log.getIp());
+            preparedStatement.setString(10, log.getReverseName());
+            preparedStatement.setString(11, log.getRequestParameters());
+            preparedStatement.setString(12, log.getRequestAttributes());
+            preparedStatement.setString(13, log.getRequestErrors());
+            preparedStatement.setString(14, log.getSessionAttributes());
+            preparedStatement.setString(15, log.getDateTimeStart());
+            preparedStatement.setString(16, log.getDateTimeEnd());
+            preparedStatement.setString(17, log.getEndType());
+
             if(preparedStatement.executeUpdate() == 1){
                 connection.commit();
             }
@@ -78,23 +89,30 @@ public class LoggerDaoImpl implements LoggerDao {
 
         try {
 
-            preparedStatement = connection.prepareStatement("SELECT * FROM logs ORDER BY serverSessionId ASC");
+            preparedStatement = connection.prepareStatement("SELECT * FROM logs ORDER BY dateTimeStart ASC, serverSessionId ASC");
 
             resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()){
 
                 log = new Logger();
-                log.setServerSessionId(resultSet.getString(1));
-                log.setUsername(resultSet.getString(2));
-                log.setUserAgent(resultSet.getString(3));
-                log.setIp(resultSet.getString(4));
-                log.setReverseName(resultSet.getString(5));
-                log.setDateTimeStart(resultSet.getString(6));
-                log.setDateTimeEnd(resultSet.getString(7));
-                log.setEndType(resultSet.getString(8));
-                log.setServerChallenge(resultSet.getString(9));
-                log.setError(resultSet.getString(10));
+                log.setServerSessionId(resultSet.getString(2));
+                log.setMessage(resultSet.getString(3));
+                log.setContext(resultSet.getString(4));
+                log.setUsername(resultSet.getString(5));
+                log.setBrowserName(resultSet.getString(6));
+                log.setBrowserVersion(resultSet.getString(7));
+                log.setOsName(resultSet.getString(8));
+                log.setOsVersion(resultSet.getString(9));
+                log.setIp(resultSet.getString(10));
+                log.setReverseName(resultSet.getString(11));
+                log.setRequestParameters(resultSet.getString(12));
+                log.setRequestAttributes(resultSet.getString(13));
+                log.setRequestErrors(resultSet.getString(14));
+                log.setSessionAttributes(resultSet.getString(15));
+                log.setDateTimeStart(resultSet.getString(16));
+                log.setDateTimeEnd(resultSet.getString(17));
+                log.setEndType(resultSet.getString(18));
                 list.add(log);
             }
 
@@ -120,35 +138,48 @@ public class LoggerDaoImpl implements LoggerDao {
     }
 
     @Override
-    public Logger getLog(String session) throws SQLException {
+    public List<Logger> listActivity() throws SQLException, ParseException {
         PreparedStatement preparedStatement = null;
         ResultSet resultSet = null;
+        List<Logger> list = new ArrayList<>();
         Logger log;
-
-
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date currentDate = new Date(System.currentTimeMillis()-(5*60*1000));
+        Date date;
         try {
 
-            preparedStatement = connection.prepareStatement("SELECT * FROM logs WHERE serverSessionId = ? AND id IN (SELECT MIN(id) FROM logs WHERE serverSessionId = ?)");
-            preparedStatement.setString(1, session);
-            preparedStatement.setString(2, session);
+            preparedStatement = connection.prepareStatement("SELECT * FROM logs");
+
             resultSet = preparedStatement.executeQuery();
 
-            if(resultSet.next()){
-                log = new Logger();
-                log.setServerSessionId(resultSet.getString(1));
-                log.setUsername(resultSet.getString(2));
-                log.setUserAgent(resultSet.getString(3));
-                log.setIp(resultSet.getString(4));
-                log.setReverseName(resultSet.getString(5));
-                log.setDateTimeStart(resultSet.getString(6));
-                log.setDateTimeEnd(resultSet.getString(7));
-                log.setEndType(resultSet.getString(8));
-                log.setServerChallenge(resultSet.getString(9));
-                log.setError(resultSet.getString(10));
+            while (resultSet.next()){
+                date = simpleDateFormat.parse(resultSet.getString(16));
+
+                if((date.after(currentDate))){
+                    log = new Logger();
+                    log.setServerSessionId(resultSet.getString(2));
+                    log.setMessage(resultSet.getString(3));
+                    log.setContext(resultSet.getString(4));
+                    log.setUsername(resultSet.getString(5));
+                    log.setBrowserName(resultSet.getString(6));
+                    log.setBrowserVersion(resultSet.getString(7));
+                    log.setOsName(resultSet.getString(8));
+                    log.setOsVersion(resultSet.getString(9));
+                    log.setIp(resultSet.getString(10));
+                    log.setReverseName(resultSet.getString(11));
+                    log.setRequestParameters(resultSet.getString(12));
+                    log.setRequestAttributes(resultSet.getString(13));
+                    log.setRequestErrors(resultSet.getString(14));
+                    log.setSessionAttributes(resultSet.getString(15));
+                    log.setDateTimeStart(resultSet.getString(16));
+                    log.setDateTimeEnd(resultSet.getString(17));
+                    log.setEndType(resultSet.getString(18));
+                    list.add(log);
+                }
+
             }
-            else{
-                throw new SQLException("There is no log with this session ID");
-            }
+
+
         } catch (SQLException e) {
 
             throw new SQLException(e);
@@ -165,6 +196,45 @@ public class LoggerDaoImpl implements LoggerDao {
                 resultSet.close();
             }
         }
-        return log;
+
+        return list;
+    }
+
+    @Override
+    public void delete() throws SQLException{
+        PreparedStatement preparedStatement= null;
+
+        connection.setAutoCommit(false);
+        try {
+
+            preparedStatement = connection.prepareStatement("DELETE FROM logs");
+
+            if(preparedStatement.executeUpdate() > 0){
+                connection.commit();
+            }
+            else {
+                throw new SQLException("Insertion error");
+            }
+
+
+        } catch (SQLException e) {
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                } catch(SQLException ex) {
+                    throw new SQLException(ex);
+                }
+                throw new SQLException(e);
+            }
+        } finally {
+            if (preparedStatement != null) {
+                preparedStatement.close();
+            }
+
+            if (connection != null) {
+                connection.setAutoCommit(true);
+                connection.close();
+            }
+        }
     }
 }

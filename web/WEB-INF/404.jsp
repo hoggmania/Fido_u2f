@@ -1,16 +1,14 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: root
-  Date: 21/08/15
-  Time: 17:42
-  To change this template use File | Settings | File Templates.
---%>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://jakarta.apache.org/taglibs/unstandard-1.0" prefix="un" %>
+<un:useConstants className="fr.neowave.messages.Messages" var="Messages" />
 <html>
 <head>
-    <title></title>
+    <title>404 error</title>
 </head>
 <body>
-JE SUIS LE MAL
+<jsp:include page="default/nav.jsp" flush="true"/>
+
+<body>
+
+${Messages.ERROR_404}
 </body>
 </html>

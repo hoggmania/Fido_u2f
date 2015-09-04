@@ -1,12 +1,11 @@
 package fr.neowave.beans;
 
-import u2f.data.DeviceRegistration;
-import u2f.exceptions.U2fBadInputException;
-
 import java.io.Serializable;
 import java.security.cert.X509Certificate;
-import java.sql.Date;
 
+/**
+ * Représentation d'un enregistrement de la table Registrations
+ */
 public class Registration implements Serializable{
 
     private String username;

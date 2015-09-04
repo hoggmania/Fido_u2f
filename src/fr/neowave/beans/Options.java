@@ -3,6 +3,9 @@ package fr.neowave.beans;
 
 import java.io.Serializable;
 
+/**
+ * Représentation de la table Options
+ */
 public class Options implements Serializable{
 
     private Boolean onlyNeowave;
@@ -12,6 +15,9 @@ public class Options implements Serializable{
     private Boolean usersAddNewTokens;
     private Boolean usersRemoveLastToken;
     private Boolean usersSeeDetails;
+    private Long sessionInactiveExpirationTime;
+    private Long requestValidityTime;
+    private Long delayToPutToken;
 
     public Boolean getOnlyNeowave() {
         return onlyNeowave;
@@ -67,5 +73,30 @@ public class Options implements Serializable{
 
     public void setUsersSeeDetails(Boolean usersSeeDetails) {
         this.usersSeeDetails = usersSeeDetails;
+    }
+
+
+    public Long getSessionInactiveExpirationTime() {
+        return sessionInactiveExpirationTime;
+    }
+
+    public void setSessionInactiveExpirationTime(Long sessionInactiveExpirationTime) {
+        this.sessionInactiveExpirationTime = sessionInactiveExpirationTime;
+    }
+
+    public Long getRequestValidityTime() {
+        return requestValidityTime;
+    }
+
+    public void setRequestValidityTime(Long requestValidityTime) {
+        this.requestValidityTime = requestValidityTime;
+    }
+
+    public Long getDelayToPutToken() {
+        return delayToPutToken;
+    }
+
+    public void setDelayToPutToken(Long delayToPutToken) {
+        this.delayToPutToken = delayToPutToken;
     }
 }

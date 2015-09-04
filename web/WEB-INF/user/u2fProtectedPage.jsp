@@ -1,3 +1,5 @@
+<%@ taglib uri="http://jakarta.apache.org/taglibs/unstandard-1.0" prefix="un" %>
+<un:useConstants className="fr.neowave.messages.Messages" var="Messages" />
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html>
@@ -7,7 +9,12 @@
 </jsp:include>
 <body>
 <jsp:include page="../default/nav.jsp" flush="true"/>
-${requestScope.errors}
-OMG THIS PROTECTED PAGE IS AWESOME !!!!!!!!!!
+
+
+<div id="error">
+  ${requestScope.errors["default"]}
+</div>
+
+${Messages.U2F_PROTECTED_PAGE}
 </body>
 </html>

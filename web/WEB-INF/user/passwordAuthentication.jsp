@@ -1,3 +1,5 @@
+<%@ taglib uri="http://jakarta.apache.org/taglibs/unstandard-1.0" prefix="un" %>
+<un:useConstants className="fr.neowave.messages.Messages" var="Messages" />
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <html>
@@ -8,52 +10,42 @@
 <body>
 <jsp:include page="../default/nav.jsp" flush="true"/>
 
-${requestScope.errors}
-<c:if test="${form.errors['default'] != null}">
-    <div id="defaultError">
-            ${form.errors["default"]}
-    </div>
-</c:if>
 
-<form method="post" action="authentication">
-  <label for="username">Username : </label>
-  <input type="text" name="username" id="username" placeholder="username" value="${username}" />
-  ${errors["username"]}
-  <label for="password">Password : </label>
-  <input type="text" name="password" id="password" placeholder="******" />
-  ${errors["password"]}
-  <input type="submit" value="Sign in !" />
-</form>
+<c:choose>
+    <c:when test="${requestScope.success}">
+        <c:if test="${!empty(requestScope.from)}">
+            <script>
+                window.location.href = "${requestScope.from}";
+            </script>
+        </c:if>
+        <script>
+            window.location.href = window.location.protocol+"//"+window.location.host+"/"+window.location.pathname.split('/')[1]+'/index';
+        </script>
+    </c:when>
+    <c:when test="${!empty(sessionScope.username)}">
+        ${Messages.ALREADY_AUTHENTICATED}
+    </c:when>
+    <c:otherwise>
+        <div id="error">
+                ${requestScope.errors["default"]}
+        </div>
+        <div id="from">
+            ${requestScope.from}
+        </div>
+        <form method="post" action="authentication">
+            <label for="username">Username : </label>
+            <input type="text" name="username" id="username" placeholder="username" value="${requestScope.username}" required pattern="[A-Za-z0-9_@.]{4,16}" title="A-Z a-z 0-9 _@. {4,16}"/>
+                ${requestScope.errors["username"]}
+            <label for="password">Password : </label>
+            <input type="password" name="password" id="password" placeholder="******" required pattern="[A-Za-z0-9]{4,16}" title="A-Z a-z 0-9 {4,16}"/>
+                ${requestScope.errors["password"]}
+            <input type="hidden" name="from" value="${param.from}">
+            <input type="submit" value="Sign in !" />
+        </form>
+    </c:otherwise>
+</c:choose>
 
-<c:if test="${!empty(request)}">
-  <script language="JavaScript" >
-    $(document).ready(function(){
-      var request = JSON.parse('<c:out value="${request}" escapeXml="false" />');
-      console.log(request);
-      var clientData = request['authenticateRequests'];
 
-      console.log(clientData);
-      u2f.sign(clientData, function(response){
-        if(response.errorCode){
-          console.log(response.errorCode)
-        }
-        else{
-          console.log(response);
-          var form = document.createElement("form");
-          form.setAttribute("method", "post");
-          form.setAttribute("action", "authentication");
-          var field = document.createElement("input");
-          field.setAttribute("type", "hidden");
-          field.setAttribute("name", "response");
-          field.setAttribute("value", JSON.stringify(response));
-          form.appendChild(field);
-          form.submit();
-        }
 
-      },60);
-    });
-
-  </script>
-</c:if>
 </body>
 </html>

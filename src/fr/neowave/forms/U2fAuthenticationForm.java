@@ -5,6 +5,7 @@ import fr.neowave.beans.Registration;
 import fr.neowave.dao.factories.DaoFactory;
 import fr.neowave.dao.factories.FactoryType;
 import fr.neowave.forms.Exceptions.FormErrors;
+import fr.neowave.messages.Messages;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import u2f.U2F;
@@ -29,8 +30,15 @@ import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
+/**
+ * Formulaire d'authentification en U2F
+ */
 public class U2fAuthenticationForm extends Form {
 
+    /**
+     * Commence l'authentification en U2F en préparant et stockant dans la session la requête à envoyer à la clé
+     * @param request HttpServletRequest
+     */
     public void startU2fAuthentication(HttpServletRequest request){
         URI uri;
         U2F u2f = new U2F();
@@ -38,27 +46,28 @@ public class U2fAuthenticationForm extends Form {
         List<Registration> registrations;
         Options options ;
         try {
+
             if(request.getSession().getAttribute("tempUsername") != null){
 
-                registrations = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list(String.valueOf(request.getSession().getAttribute("tempUsername")));
+                registrations = DaoFactory.getFactory(FactoryType.DEFAULT_FACTORY).getRegistrationDao().list(String.valueOf(request.getSession().getAttribute("tempUsername")));
 
             } else{
 
-                options = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getOptionsDao().getOptions();
-                registrations = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list(String.valueOf(
+                options = DaoFactory.getFactory(FactoryType.DEFAULT_FACTORY).getOptionsDao().getOptions();
+                registrations = DaoFactory.getFactory(FactoryType.DEFAULT_FACTORY).getRegistrationDao().list(String.valueOf(
                         request.getSession().getAttribute("tempAdmin") == null ? request.getSession().getAttribute("username") : "admin"));
                 if (request.getSession().getAttribute("username") != null && !request.getSession().getAttribute("username").equals("admin") && options.getAdminReplaceUsersTokens()){
-                    registrations.addAll(DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list("admin"));
+                    registrations.addAll(DaoFactory.getFactory(FactoryType.DEFAULT_FACTORY).getRegistrationDao().list("admin"));
                 }
             }
             if(registrations.isEmpty()){
-                this.setError(FormErrors.DEFAULT_ERR.toString(), "You don't have any registered token");
+                this.setError(FormErrors.DEFAULT_ERR.toString(), Messages.U2F_AUTH_NO_TOKEN_REGISTERED);
             }else{
                 for (int i = 0; i < registrations.size(); ++i){
                     if(registrations.get(i).getSuspended()) registrations.remove(i);
                 }
                 if(registrations.isEmpty()){
-                    this.setError(FormErrors.DEFAULT_ERR.toString(), "Your tokens are all suspended");
+                    this.setError(FormErrors.DEFAULT_ERR.toString(), Messages.U2F_AUTH_TOKEN_ALL_SUSPENDED);
                 }
                 else{
                     uri = new URI(request.getRequestURL().toString());
@@ -84,7 +93,6 @@ public class U2fAuthenticationForm extends Form {
 
                     request.getSession().setAttribute("authenticationChallenge", stringBuilder.toString());
                     request.getSession().setAttribute("timeStamp", System.currentTimeMillis());
-                    this.setMessage("Please connect your token");
                 }
             }
 
@@ -94,6 +102,11 @@ public class U2fAuthenticationForm extends Form {
         }
 
     }
+
+    /**
+     * Récupère la requete stockée dans la session puis l'enlève de celle-ci puis authentifie en U2F
+     * @param request HttpServletRequest
+     */
     public void doU2fAuthentication(HttpServletRequest request){
         U2F u2f = new U2F();
         String authenticationRequests = String.valueOf(request.getSession().getAttribute("authenticationChallenge"));
@@ -110,7 +123,8 @@ public class U2fAuthenticationForm extends Form {
         Long timestamp = Long.valueOf(String.valueOf(request.getSession().getAttribute("timeStamp")));
         request.getSession().removeAttribute("timeStamp");
         try {
-            if((System.currentTimeMillis()-timestamp) > 120000) throw new TimeoutException("Request timeout, please try again");
+            options = DaoFactory.getFactory(FactoryType.DEFAULT_FACTORY).getOptionsDao().getOptions();
+            if((System.currentTimeMillis()-timestamp) > (options.getRequestValidityTime()*1000)) throw new TimeoutException(Messages.U2F_AUTH_REQUEST_TIMEOUT);
 
             JSONObject temp = (JSONObject) new JSONParser().parse(authenticationRequests);
 
@@ -119,22 +133,18 @@ public class U2fAuthenticationForm extends Form {
                     .concat("}"));
 
             AuthenticateResponse authenticateResponse = AuthenticateResponse.fromJson(request.getParameter("response"));
-
-            options = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getOptionsDao().getOptions();
-
-
-            List<Registration> registrations = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list(username);
+            List<Registration> registrations = DaoFactory.getFactory(FactoryType.DEFAULT_FACTORY).getRegistrationDao().list(username);
             if (options.getAdminReplaceUsersTokens() && !username.equals("admin"))
-                registrations.addAll(DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().list("admin"));
+                registrations.addAll(DaoFactory.getFactory(FactoryType.DEFAULT_FACTORY).getRegistrationDao().list("admin"));
 
             if(registrations.isEmpty()){
-                this.setError(FormErrors.DEFAULT_ERR.toString(), "You don't have any registered token");
+                this.setError(FormErrors.DEFAULT_ERR.toString(), Messages.U2F_AUTH_NO_TOKEN_REGISTERED);
             }else {
                 for (int i = 0; i < registrations.size(); ++i) {
                     if (registrations.get(i).getSuspended()) registrations.remove(i);
                 }
                 if (registrations.isEmpty()) {
-                    this.setError(FormErrors.DEFAULT_ERR.toString(), "Your tokens are all suspended");
+                    this.setError(FormErrors.DEFAULT_ERR.toString(), Messages.U2F_AUTH_TOKEN_ALL_SUSPENDED);
                 } else {
                     List<DeviceRegistration> deviceRegistrations = registrations.stream().map(registration -> new DeviceRegistration(registration.getKeyHandle(), registration.getPublicKey(), registration.getCertificate(),
                             registration.getCounter())).collect(Collectors.toList());
@@ -149,18 +159,19 @@ public class U2fAuthenticationForm extends Form {
                     registration.setPublicKey(deviceRegistration.getPublicKey());
                     registration.setCertificate(deviceRegistration.getAttestationCertificate());
                     registration.setCounter(Long.valueOf(counter.get("counter").toString()));
+                    this.setMessage("{\"keyHandle\":\"".concat(deviceRegistration.getKeyHandle()).concat("\",\"publicKey\":\"").concat(deviceRegistration.getPublicKey())
+                            .concat("\",\"counter\":\"").concat(String.valueOf(deviceRegistration.getCounter())).concat("\",\"certificateFrom\":\"").concat(deviceRegistration.getAttestationCertificate().getIssuerDN().toString()).concat("\"}"));
 
                     registrations.stream().filter(registration1 -> registration1.getUsername().equals("admin") && Objects.equals(registration.getKeyHandle(), registration1.getKeyHandle())).forEach(registration1 -> registration.setUsername("admin"));
                     if(registration.getUsername() == null) registration.setUsername(username);
-                    DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getRegistrationDao().updateCounter(registration);
+                    DaoFactory.getFactory(FactoryType.DEFAULT_FACTORY).getRegistrationDao().updateCounter(registration);
 
                     if (!username.equals("admin")) {
                         request.getSession().setAttribute("u2fAuthenticated", true);
                     } else {
+                        request.getSession().setMaxInactiveInterval(options.getSessionInactiveExpirationTime().intValue());
                         request.getSession().setAttribute("username", username);
                     }
-
-                    this.setMessage("Token authenticated");
                 }
             }
 

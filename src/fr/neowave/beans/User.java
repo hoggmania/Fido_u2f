@@ -3,6 +3,9 @@ package fr.neowave.beans;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Représentation d'un utilisateur de la table Users
+ */
 public class User implements Serializable{
 
     private String username;
@@ -42,8 +45,5 @@ public class User implements Serializable{
         this.registrations = registrations;
     }
 
-    public String toJSON(){
-        return "{ username :".concat(username).concat(", password:").concat(password).concat(", suspended:").concat(String.valueOf(suspended).concat("}"));
-    }
 
 }

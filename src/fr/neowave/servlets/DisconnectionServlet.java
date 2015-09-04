@@ -1,18 +1,13 @@
 package fr.neowave.servlets;
 
-import fr.neowave.beans.Logger;
-import fr.neowave.dao.factories.DaoFactory;
-import fr.neowave.dao.factories.FactoryType;
-
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.SQLException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.List;
 
 @WebServlet("/disconnection")
 public class DisconnectionServlet extends HttpServlet {
@@ -21,33 +16,33 @@ public class DisconnectionServlet extends HttpServlet {
         super();
     }
 
-    private Logger logger = new Logger();
 
-    public void doGet(HttpServletRequest request, HttpServletResponse response){
-       try{
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        response.addHeader("X-XSS-Protection", "1; mode=block");
+        response.addHeader("X-Frame-Options", "DENY; SAMEORIGIN");
+        response.addHeader("X-Content-Type-Options", "nosniff");
+        response.addHeader("Content-Security-Policy", "img-src 'self';" +
+                "media-src 'self';font-src 'self'");
+        URLConnection connection = new URL(request.getRequestURL().toString()).openConnection();
+        List<String> cookies = connection.getHeaderFields().get("Set-Cookie");
 
-           Boolean admin = request.getSession().getAttribute("username") != null && request.getSession().getAttribute("username").equals("admin");
-           if(request.getSession().getAttribute("username") != null)request.getSession().invalidate();
-           logger.setServerSessionId(request.getSession().getId());
-           DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-           java.sql.Date date = new java.sql.Date(Calendar.getInstance().getTime().getTime());
-           logger.setDateTimeEnd(dateFormat.format(date));
-           logger.setEndType("Manual logout");
-           try {
-               DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getLoggerDao().create(logger);
-           } catch (SQLException | IOException e) {
-               e.printStackTrace();
-           }
-           if (admin){
+        if (cookies != null)
+            for(String cookie : cookies){
+                response.setHeader("Set-Cookie", cookie.concat("; HttpOnly;"));
+            }
 
-               response.sendRedirect(request.getContextPath().concat("/adminAuthentication"));
-           }else{
 
-               response.sendRedirect(request.getContextPath().concat("/authentication"));
-           }
+        Boolean admin = request.getSession().getAttribute("username") != null && request.getSession().getAttribute("username").equals("admin");
+       if(request.getSession().getAttribute("username") != null)request.getSession().invalidate();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+       if (admin){
+
+           response.sendRedirect(request.getContextPath().concat("/adminAuthentication"));
+       }else{
+
+           response.sendRedirect(request.getContextPath().concat("/authentication"));
+       }
+
+
     }
 }

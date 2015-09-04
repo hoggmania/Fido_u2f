@@ -1,44 +1,51 @@
 package fr.neowave.beans;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
 
-public class Logger {
-    private String loginType;
-    private String error;
+/**
+ * Représentation d'un log
+ */
+public class Logger implements Serializable{
+    private String serverSessionId;
+    private String message;
+    private String context;
     private String username;
-    private String userAgent;
+    private String browserName;
+    private String browserVersion;
+    private String osName;
+    private String osVersion;
     private String ip;
     private String reverseName;
+    private String requestParameters;
+    private String requestAttributes;
+    private String requestErrors;
+    private String sessionAttributes;
     private String dateTimeStart;
     private String dateTimeEnd;
-    private String endType ;
-    private String serverChallenge;
-    private String serverSessionId;
+    private String endType;
 
-
-    public String getReverseName() {
-        return reverseName;
+    public String getServerSessionId() {
+        return serverSessionId;
     }
 
-    public void setReverseName(String reverseName) {
-        this.reverseName = reverseName;
+    public void setServerSessionId(String serverSessionId) {
+        this.serverSessionId = serverSessionId;
     }
 
-    public String getLoginType() {
-        return loginType;
+    public String getMessage() {
+        return message;
     }
 
-    public void setLoginType(String loginType) {
-        this.loginType = loginType;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
-    public String getError() {
-        return error;
+    public String getContext() {
+        return context;
     }
 
-    public void setError(String error) {
-        this.error = error;
+    public void setContext(String context) {
+        this.context = context;
     }
 
     public String getUsername() {
@@ -49,13 +56,36 @@ public class Logger {
         this.username = username;
     }
 
-
-    public String getUserAgent() {
-        return userAgent;
+    public String getBrowserName() {
+        return browserName;
     }
 
-    public void setUserAgent(String userAgent) {
-        this.userAgent = userAgent;
+    public void setBrowserName(String browserName) {
+        this.browserName = browserName;
+    }
+
+    public String getBrowserVersion() {
+        return browserVersion;
+    }
+
+    public void setBrowserVersion(String browserVersion) {
+        this.browserVersion = browserVersion;
+    }
+
+    public String getOsName() {
+        return osName;
+    }
+
+    public void setOsName(String osName) {
+        this.osName = osName;
+    }
+
+    public String getOsVersion() {
+        return osVersion;
+    }
+
+    public void setOsVersion(String osVersion) {
+        this.osVersion = osVersion;
     }
 
     public String getIp() {
@@ -64,6 +94,46 @@ public class Logger {
 
     public void setIp(String ip) {
         this.ip = ip;
+    }
+
+    public String getReverseName() {
+        return reverseName;
+    }
+
+    public void setReverseName(String reverseName) {
+        this.reverseName = reverseName;
+    }
+
+    public String getRequestParameters() {
+        return requestParameters;
+    }
+
+    public void setRequestParameters(String requestParameters) {
+        this.requestParameters = requestParameters;
+    }
+
+    public String getRequestAttributes() {
+        return requestAttributes;
+    }
+
+    public void setRequestAttributes(String requestAttributes) {
+        this.requestAttributes = requestAttributes;
+    }
+
+    public String getRequestErrors() {
+        return requestErrors;
+    }
+
+    public void setRequestErrors(String requestErrors) {
+        this.requestErrors = requestErrors;
+    }
+
+    public String getSessionAttributes() {
+        return sessionAttributes;
+    }
+
+    public void setSessionAttributes(String sessionAttributes) {
+        this.sessionAttributes = sessionAttributes;
     }
 
     public String getDateTimeStart() {
@@ -89,22 +159,4 @@ public class Logger {
     public void setEndType(String endType) {
         this.endType = endType;
     }
-
-    public String getServerChallenge() {
-        return serverChallenge;
-    }
-
-    public void setServerChallenge(String serverChallenge) {
-        this.serverChallenge = serverChallenge;
-    }
-
-    public String getServerSessionId() {
-        return serverSessionId;
-    }
-
-    public void setServerSessionId(String serverSessionId) {
-        this.serverSessionId = serverSessionId;
-    }
-
-
 }

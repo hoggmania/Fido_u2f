@@ -1,56 +1,68 @@
 package fr.neowave.servlets;
 
-import fr.neowave.beans.Logger;
-import fr.neowave.beans.User;
 import fr.neowave.forms.AuthenticationForm;
-import fr.neowave.forms.U2fAuthenticationForm;
-import fr.neowave.forms.U2fRegistrationForm;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.HashMap;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.List;
 
 
 @WebServlet("/authentication")
 public class AuthenticationServlet extends HttpServlet {
 
-    private Logger logger;
 
-    public AuthenticationServlet() {
-        super();
-    }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
-        if(request.getSession().getAttribute("username") == null){
+        response.addHeader("X-XSS-Protection", "1; mode=block");
+        response.addHeader("X-Frame-Options", "DENY; SAMEORIGIN");
+        response.addHeader("X-Content-Type-Options", "nosniff");
+        response.addHeader("Content-Security-Policy", "img-src 'self';" +
+                "media-src 'self';font-src 'self'");
+        URLConnection connection = new URL(request.getRequestURL().toString()).openConnection();
+        List<String> cookies = connection.getHeaderFields().get("Set-Cookie");
 
-            this.getServletContext().getRequestDispatcher("/WEB-INF/user/passwordAuthentication.jsp").forward(request, response);
-        }
-        else{
-            response.sendRedirect(request.getContextPath().concat("/index"));
-        }
+        if (cookies != null)
+            for(String cookie : cookies){
+                response.setHeader("Set-Cookie", cookie.concat("; HttpOnly;"));
+            }
 
+        this.getServletContext().getRequestDispatcher("/WEB-INF/user/passwordAuthentication.jsp").forward(request, response);
+        request.getSession().removeAttribute("from");
     }
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException{
+    protected void doPost(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
 
-
+        if (request.getSession().getAttribute("username") == null) {
             AuthenticationForm authenticationForm = new AuthenticationForm();
             authenticationForm.startAuthentication(request);
 
-            if(authenticationForm.getErrors().isEmpty()){
 
-                response.sendRedirect(request.getContextPath().concat("/index"));
-            }
-            else{
+
+            if (authenticationForm.getErrors().isEmpty()) {
+                request.setAttribute("success", true);
+                request.setAttribute("from", request.getParameter("from"));
+
+            } else {
                 request.setAttribute("errors", authenticationForm.getErrors());
-                this.getServletContext().getRequestDispatcher("/WEB-INF/user/passwordAuthentication.jsp").forward(request,response);
 
             }
+
+            this.getServletContext().getRequestDispatcher("/WEB-INF/user/passwordAuthentication.jsp").forward(request, response);
+            request.getSession().removeAttribute("from");
+
+        }
+        else if (request.getSession().getAttribute("username").equals("admin")) {
+            response.sendRedirect(request.getContextPath().concat("/authentication"));
+        }
+        else {
+            response.sendRedirect(request.getContextPath().concat("/authentication"));
         }
 
+    }
 }

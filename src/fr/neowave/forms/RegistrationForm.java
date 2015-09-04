@@ -6,6 +6,7 @@ import fr.neowave.beans.User;
 import fr.neowave.dao.factories.DaoFactory;
 import fr.neowave.dao.factories.FactoryType;
 import fr.neowave.forms.Exceptions.FormErrors;
+import fr.neowave.messages.Messages;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
@@ -20,33 +21,33 @@ public class RegistrationForm extends Form{
     private User user = new User();
 
 
-    public User register(HttpServletRequest request){
+    public void register(HttpServletRequest request){
         try {
             if(canRegister(request)){
-                DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getUserDao().create(user);
+                DaoFactory.getFactory(FactoryType.DEFAULT_FACTORY).getUserDao().create(user);
+                if(request.getSession().getAttribute("username") == null || !request.getSession().getAttribute("username").equals("admin")){
+                    request.getSession().setAttribute("username", user.getUsername());
+                    request.getSession().setAttribute("hasKey", false);
+                    request.getSession().setAttribute("u2fAuthenticated", false);
+                    Options options = DaoFactory.getFactory(FactoryType.DEFAULT_FACTORY).getOptionsDao().getOptions();
+                    request.getSession().setMaxInactiveInterval(options.getSessionInactiveExpirationTime().intValue());
+                }
+
             }
         } catch (SQLException | UnsupportedEncodingException | NoSuchAlgorithmException e) {
             this.setError(FormErrors.DEFAULT_ERR.toString(), e.getMessage());
         }
 
-        return user;
     }
 
     private Boolean canRegister(HttpServletRequest request) throws NoSuchAlgorithmException, SQLException, UnsupportedEncodingException {
 
-        Options options = DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getOptionsDao().getOptions();
-        if(areValidParameters(request)){
-            return true;
-        }
-        else if (request.getSession().getAttribute("username") != null &&
-                request.getSession().getAttribute("username").equals("admin")
-                && !options.getUserCreateAccount()){
-            this.setError("default", "Only admin can create account");
+        Options options = DaoFactory.getFactory(FactoryType.DEFAULT_FACTORY).getOptionsDao().getOptions();
+        if ((request.getSession().getAttribute("username") == null || !request.getSession().getAttribute("username").equals("admin")) && !options.getUserCreateAccount()) {
+            this.setError("option", Messages.REG_CANT_CREATE_ACCOUNT);
             return false;
         }
-        else{
-            return false;
-        }
+        else return areValidParameters(request);
     }
 
 
@@ -66,27 +67,27 @@ public class RegistrationForm extends Form{
         passwordConfirmation = passwordConfirmation.trim();
 
         if(!username.matches("[a-zA-Z0-9_@.]*")) {
-            this.setError(FormErrors.USERNAME_ERR.toString(), "Allowed characters are a-z A-Z 0-9 . _ @.");
+            this.setError(FormErrors.USERNAME_ERR.toString(), Messages.REG_USERNAME_WRONG_CHARACTERS);
             return false;
         }
-        else if (username.length() > 32 || username.length() < 6) {
-            this.setError(FormErrors.USERNAME_ERR.toString(), "Username size must be between 6 and 32.");
+        else if (username.length() > 32 || username.length() < 4) {
+            this.setError(FormErrors.USERNAME_ERR.toString(), Messages.REG_USERNAME_WRONG_LENGTH);
             return false;
         }
         else if (!password.matches("[a-zA-Z0-9]*")) {
-            this.setError(FormErrors.USERNAME_ERR.toString(), "Allowed characters are a-z A-Z 0-9.");
+            this.setError(FormErrors.USERNAME_ERR.toString(), Messages.REG_PASSWORD_WRONG_CHARACTERS);
             return false;
         }
-        else if (password.length() > 32 || password.length() < 6) {
-            this.setError(FormErrors.USERNAME_ERR.toString(), "Password size must be between 6 and 32.");
+        else if (password.length() > 32 || password.length() < 4) {
+            this.setError(FormErrors.USERNAME_ERR.toString(), Messages.REG_PASSWORD_WRONG_SIZE);
             return false;
         }
         else if (!password.equals(passwordConfirmation)) {
-            this.setError(FormErrors.USERNAME_ERR.toString(), "Passwords don't match.");
+            this.setError(FormErrors.PASSWORD_ERR.toString(), Messages.REG_PASSWORDS_DONT_MATCH);
             return false;
         }
-        else if(DaoFactory.getFactory(FactoryType.MYSQL_FACTORY).getUserDao().getUser(username) != null) {
-            this.setError(FormErrors.USERNAME_ERR.toString(), "User already exists.");
+        else if(DaoFactory.getFactory(FactoryType.DEFAULT_FACTORY).getUserDao().getUser(username) != null) {
+            this.setError(FormErrors.USERNAME_ERR.toString(), Messages.REG_USERNAME_ALREADY_EXISTS);
             return false;
         }
         else {

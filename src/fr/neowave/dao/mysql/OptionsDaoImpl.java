@@ -33,6 +33,9 @@ public class OptionsDaoImpl implements OptionsDao {
             options.setUsersAddNewTokens(Boolean.valueOf(resultSet.getString(6)));
             options.setUsersRemoveLastToken(Boolean.valueOf(resultSet.getString(7)));
             options.setUsersSeeDetails(Boolean.valueOf(resultSet.getString(8)));
+            options.setSessionInactiveExpirationTime(resultSet.getLong(9));
+            options.setRequestValidityTime(resultSet.getLong(10));
+            options.setDelayToPutToken(resultSet.getLong(11));
         } catch (SQLException e) {
             throw new SQLException(e);
 
@@ -56,7 +59,8 @@ public class OptionsDaoImpl implements OptionsDao {
         try {
             connection.setAutoCommit(false);
             preparedStatement = connection.prepareStatement("UPDATE options SET onlyNeowave = ?, userCreateAccount = ?, userRegisterFirstToken = ?, " +
-                    "userRemoveLastToken = ?, adminTokenReplaceUserToken = ?, userAddNewToken = ?, showDebug = ? WHERE role = 'current'");
+                    "userRemoveLastToken = ?, adminTokenReplaceUserToken = ?, userAddNewToken = ?, showDebug = ?, " +
+                    "sessionInactiveExpirationTime = ?, requestValidityTime = ?, timeToPlugToken = ? WHERE role = 'current'");
 
             preparedStatement.setString(1, String.valueOf(options.getOnlyNeowave()));
             preparedStatement.setString(2, String.valueOf(options.getAdminReplaceUsersTokens()));
@@ -65,7 +69,9 @@ public class OptionsDaoImpl implements OptionsDao {
             preparedStatement.setString(5, String.valueOf(options.getUsersAddNewTokens()));
             preparedStatement.setString(6, String.valueOf(options.getUsersRemoveLastToken()));
             preparedStatement.setString(7, String.valueOf(options.getUsersSeeDetails()));
-
+            preparedStatement.setLong(8, options.getSessionInactiveExpirationTime());
+            preparedStatement.setLong(9, options.getRequestValidityTime());
+            preparedStatement.setLong(10, options.getDelayToPutToken());
             if(preparedStatement.executeUpdate() == 1){
                 connection.commit();
             }else{
@@ -112,9 +118,13 @@ public class OptionsDaoImpl implements OptionsDao {
             options.setUsersAddNewTokens(Boolean.valueOf(resultSet.getString(6)));
             options.setUsersRemoveLastToken(Boolean.valueOf(resultSet.getString(7)));
             options.setUsersSeeDetails(Boolean.valueOf(resultSet.getString(8)));
+            options.setSessionInactiveExpirationTime(resultSet.getLong(9));
+            options.setRequestValidityTime(resultSet.getLong(10));
+            options.setDelayToPutToken(resultSet.getLong(11));
 
             preparedStatement = connection.prepareStatement("UPDATE options SET onlyNeowave = ?, userCreateAccount = ?, userRegisterFirstToken = ?, " +
-                    "userRemoveLastToken = ?, adminTokenReplaceUserToken = ?, userAddNewToken = ?, showDebug = ? WHERE role = 'current'");
+                    "userRemoveLastToken = ?, adminTokenReplaceUserToken = ?, userAddNewToken = ?, showDebug = ?, " +
+                    "sessionInactiveExpirationTime = ?, requestValidityTime = ?, timeToPlugToken = ? WHERE role = 'current'");
 
             preparedStatement.setString(1, String.valueOf(options.getOnlyNeowave()));
             preparedStatement.setString(2, String.valueOf(options.getAdminReplaceUsersTokens()));
@@ -123,6 +133,9 @@ public class OptionsDaoImpl implements OptionsDao {
             preparedStatement.setString(5, String.valueOf(options.getUsersAddNewTokens()));
             preparedStatement.setString(6, String.valueOf(options.getUsersRemoveLastToken()));
             preparedStatement.setString(7, String.valueOf(options.getUsersSeeDetails()));
+            preparedStatement.setLong(8, options.getSessionInactiveExpirationTime());
+            preparedStatement.setLong(9, options.getRequestValidityTime());
+            preparedStatement.setLong(10, options.getDelayToPutToken());
 
             if(preparedStatement.executeUpdate() == 1){
                 connection.commit();

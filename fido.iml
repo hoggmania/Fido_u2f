@@ -45,5 +45,8 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="javax.servlet.jsp.jstl-api-1.2.1" level="project" />
+    <orderEntry type="library" name="javax.el-3.0.0" level="project" />
+    <orderEntry type="library" name="taglibs-unstandard-20060829" level="project" />
   </component>
 </module>

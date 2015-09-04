@@ -7,6 +7,18 @@
         <element id="directory" name="classes">
           <element id="module-output" name="fido" />
         </element>
+        <element id="directory" name="lib">
+          <element id="file-copy" path="$PROJECT_DIR$/web/WEB-INF/lib/jsf-api-1.1_02.jar" />
+          <element id="library" level="project" name="json-simple-1.1.1" />
+          <element id="library" level="project" name="jstl-1.2" />
+          <element id="library" level="project" name="jackson-core-2.6.0-rc3" />
+          <element id="library" level="project" name="jackson-annotations-2.6.0-rc3" />
+          <element id="file-copy" path="$PROJECT_DIR$/web/WEB-INF/lib/bcprov-jdk16-140.jar" />
+          <element id="library" level="project" name="com.fasterxml.jackson.databind" />
+          <element id="library" level="project" name="guava-18.0" />
+          <element id="library" level="project" name="javax.el-3.0.0" />
+          <element id="library" level="project" name="taglibs-unstandard-20060829" />
+        </element>
       </element>
     </root>
   </artifact>

@@ -17,13 +17,16 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
+/**
+ *
+ */
 public class MySqlDaoFactory extends DaoFactory{
 
-    private static final String PROPERTIES_FILE      = "/fr/neowave/dao/mysql/mysql.properties";
-    private static final String PROPERTY_URL             = "url";
-    private static final String PROPERTY_DRIVER          = "driver";
-    private static final String PROPERTY_USERNAME = "username";
-    private static final String PROPERTY_PASSWORD   = "password";
+    private static final String PROPERTIES_FILE         = "/fr/neowave/dao/mysql/mysql.properties";
+    private static final String PROPERTY_URL            = "url";
+    private static final String PROPERTY_DRIVER         = "driver";
+    private static final String PROPERTY_USERNAME       = "username";
+    private static final String PROPERTY_PASSWORD       = "password";
 
     private String              url;
     private String              username;
@@ -37,7 +40,7 @@ public class MySqlDaoFactory extends DaoFactory{
     }
 
 
-    /*
+    /**
      * Méthode chargée de récupérer les informations de connexion à la base de
      * données, charger le driver JDBC et retourner une instance de la Factory
      */
@@ -74,27 +77,49 @@ public class MySqlDaoFactory extends DaoFactory{
         return new MySqlDaoFactory( url, username, password );
     }
 
-    /* Méthode chargée de fournir une connexion à la base de données */
+    /**
+     *  Méthode chargée de fournir une connexion à la base de données
+     *  @return Connection connexion à la base de données
+     */
     public Connection getConnection() throws SQLException {
         return DriverManager.getConnection(url, username, password);
     }
 
-    /*
-     * Méthodes de récupération de l'implémentation des différents DAO (un seul
-     * pour le moment)
+
+    /**
+     * Retourne l'implémentation d'un dao d'utilisateur
+     * @return UserDao
+     * @throws SQLException
      */
     public UserDao getUserDao() throws SQLException {
         return new UserDaoImpl( this.getConnection() );
     }
 
+    /**
+     * Retourne l'implémentation d'un dao d'enregistrement
+     * @return RegistrationDao
+     * @throws SQLException
+     */
     public RegistrationDao getRegistrationDao() throws SQLException {
         return new RegistrationDaoImpl(this.getConnection());
     }
 
+
+    /**
+     * Retourne l'implémentation d'un dao de log
+     * @return LoggerDao
+     * @throws SQLException
+     */
     public LoggerDao getLoggerDao() throws SQLException{
         return new LoggerDaoImpl(this.getConnection());
     }
 
+
+    /**
+     * Retourne l'implémentation d'un dao d'options
+     * @return OptionsDao
+     * @throws SQLException
+     */
     public OptionsDao getOptionsDao() throws SQLException{
         return new OptionsDaoImpl(this.getConnection());
     }

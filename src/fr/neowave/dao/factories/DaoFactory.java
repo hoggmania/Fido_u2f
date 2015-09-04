@@ -9,9 +9,13 @@ import java.sql.SQLException;
 
 public abstract class DaoFactory {
 
-
+    /**
+     * Retourne une instance de la base de donnée
+     * @param type FactoryType
+     * @return DaoFactory
+     */
     public static DaoFactory getFactory(FactoryType type){
-        if(type.equals(FactoryType.MYSQL_FACTORY)){
+        if(type.equals(FactoryType.DEFAULT_FACTORY)){
             return MySqlDaoFactory.getInstance();
         }
         return MySqlDaoFactory.getInstance();
